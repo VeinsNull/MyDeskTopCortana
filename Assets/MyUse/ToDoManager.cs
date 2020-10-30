@@ -8,6 +8,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Threading;
+using System;
+using System.Collections;
 
 public class ToDoManager : MonoBehaviour
 {
@@ -17,7 +20,11 @@ public class ToDoManager : MonoBehaviour
 
     string filePath;//存放同步的json文件
     string jsonName = "1.json";
+    Thread connectThread;
     private List<ListObject> ListObjects = new List<ListObject>();
+
+    bool buttonOk = false;
+    bool downOk = false;
 
     public class listItemClass
     {
@@ -32,6 +39,7 @@ public class ToDoManager : MonoBehaviour
 
     void Start()
     {
+        buttonOk = true;
         //程序一开始找到json文件目录，并赋值给filepath；
         if (Application.platform == RuntimePlatform.Android)
         {
@@ -43,6 +51,16 @@ public class ToDoManager : MonoBehaviour
         }
         loadJsonData();
         //然后程序加载本地的json数据
+    }
+
+    void Update()
+    {
+        if (downOk)
+        {
+            //从服务器上下载数据
+            loadJsonData();
+            downOk = false;
+        }         
     }
 
     public void CreateNewItem()
@@ -135,83 +153,118 @@ public class ToDoManager : MonoBehaviour
 
     public void ButtonClick(string info)
     {
-        if (info == "下载")
+        
+        if (buttonOk)
         {
-            #region 连接服务器
-            IPAddress ip = IPAddress.Parse("108.61.23.214");
-            Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            try
+            StartCoroutine(WaitTime());
+            if (info == "下载")
             {
-                clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
-                Debug.Log("连接服务器成功:准备下载");
+                connectThread = new Thread(new ThreadStart(CouldDown));
+                connectThread.Start();
             }
-            catch
+            else
             {
-                Debug.Log("连接服务器失败");
-                return;
+                connectThread = new Thread(new ThreadStart(UpdateCould));
+                connectThread.Start();
             }
-            #endregion
-            //封装到函数里由unity的button事件调用
-            clientSocket.Send(Encoding.UTF8.GetBytes(info));//向服务器发送数据，需要发送中文则需要使用Encoding.UTF8.GetBytes()，否则会乱码
-            //发送完下载命令后，准备接收服务端发过来的数据
-            string recvStr = "";
-            byte[] recvBytes = new byte[1024];
-            int bytes;
-            bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
-            recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
-            //格式化字符串，因为从服务端传过来的数据太乱了
-            string contents = Decodeing(recvStr);
-            contents = contents.Replace(@"\\n", "\r\n");
-            contents = contents.Replace(@"\\", "");
-            contents = contents.Replace(@"\", "");
-            contents = contents.Replace("\'\"","");
-            contents = contents.Replace("\"\'", "");
-            Debug.Log("从服务端获取的数据为：" + contents);
-            File.WriteAllText(filePath, contents);
-            //从本地文件读取重新加载
-            loadJsonData();
-            clientSocket.Close();
         }
         else
         {
-            #region 连接服务器
-            IPAddress ip = IPAddress.Parse("108.61.23.214");
-            Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            try
-            {
-                clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
-                Debug.Log("连接服务器成功:准备上传");
-            }
-            catch
-            {
-                Debug.Log("连接服务器失败");
-                return;
-            }
-            #endregion
-            //string contents = "";
-            //读取本地json文件，将其转换为string类型
-            string json = ReadJsonFun();
-            Debug.Log(json);
-            //contents = JsonUtility.FromJson<listItemClass>(json);
-            //将string类型的数据发送给服务器，让服务器以json文件保存
-            clientSocket.Send(Encoding.UTF8.GetBytes(json));
-            clientSocket.Close();
+            Debug.Log("请隔3秒后再试");
+        }   
+    }
+
+    IEnumerator WaitTime()
+    {
+        buttonOk = false;
+        yield return new WaitForSeconds(3f);
+        buttonOk = true;
+        yield break;
+    }
+
+    void UpdateCould()
+    {
+        #region 连接服务器
+        IPAddress ip = IPAddress.Parse("108.61.23.214");
+        Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        try
+        {
+            clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
+            Debug.Log("连接服务器成功:准备上传");
         }
+        catch
+        {
+            Debug.Log("连接服务器失败");
+            return;
+        }
+        #endregion
+        //读取本地json文件，将其转换为string类型
+        string json = ReadJsonFun();
+        Debug.Log(json);
+        //将string类型的数据发送给服务器，让服务器以json文件保存
+        clientSocket.Send(Encoding.UTF8.GetBytes(json));
+        clientSocket.Close();
+        if (connectThread != null)
+        {
+            connectThread.Interrupt();
+            connectThread.Abort();
+        }
+    }
+
+    void CouldDown()
+    {
+        #region 连接服务器
+        IPAddress ip = IPAddress.Parse("108.61.23.214");
+        Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        try
+        {
+            clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
+            Debug.Log("连接服务器成功:准备下载");
+        }
+        catch
+        {
+            Debug.Log("连接服务器失败");
+            return;
+        }
+        #endregion
+        //封装到函数里由unity的button事件调用
+        clientSocket.Send(Encoding.UTF8.GetBytes("下载"));//向服务器发送数据，需要发送中文则需要使用Encoding.UTF8.GetBytes()，否则会乱码
+                                                        //发送完下载命令后，准备接收服务端发过来的数据
+        string recvStr = "";
+        byte[] recvBytes = new byte[1024];
+        int bytes;
+        bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
+        recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
+        //格式化字符串，因为从服务端传过来的数据太乱了
+        Debug.Log("从服务端获取的数据为：" + recvStr);
+        string contents = Decodeing(recvStr);
+        contents = contents.Replace(@"\\n", "\n");
+        contents = contents.Replace(@"\\", "");
+        contents = contents.Replace(@"\", "");
+        contents = contents.Replace("\'\"", "");
+        contents = contents.Replace("\"\'", "");
+        Debug.Log("从服务端获取的数据解析后为：" + contents);
+        File.WriteAllText(filePath, contents);
+        clientSocket.Close();
+        downOk = true;
+        if (connectThread != null)
+        {
+            connectThread.Interrupt();
+            connectThread.Abort();
+        }      
     }
 
     string ReadJsonFun()
     {
-        UnityWebRequest www = UnityWebRequest.Get(filePath);
-        www.SendWebRequest();
-        while (!www.isDone) { }
-        if (string.IsNullOrEmpty(www.error))
+        string dataAsJson = File.ReadAllText(filePath,Encoding.UTF8);
+        if(dataAsJson==null)
         {
-            string dataAsJson = www.downloadHandler.text;
-            return dataAsJson;
+            return "";
         }
-        return "";
+        return dataAsJson;
+        
     }
-    public string Decodeing(string s)
+    string Decodeing(string s)
     {
         Regex reUnicode = new Regex(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
         return reUnicode.Replace(s, m =>
