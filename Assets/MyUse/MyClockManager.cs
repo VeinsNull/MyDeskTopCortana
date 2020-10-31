@@ -31,8 +31,15 @@ public class MyClockManager : MonoBehaviour
     private int jsButtonCount = 0;//计时器按钮按下计数 
     private int jsTime;//计时器时间
     private bool aniContro = false;
-
     float mi = 0;
+
+    [SerializeField]
+    private Button backButton;//返回按钮
+    [SerializeField]
+    private Transform toDoListCanvas;
+    [SerializeField]
+    private Transform clockPanelCanvas;
+
     public float LoadingImage { get; private set; }//用来分享进度，用来控制人物透明度
 
     void Start()
@@ -43,23 +50,31 @@ public class MyClockManager : MonoBehaviour
         fqButton.onClick.AddListener(FQButtonDown);
         jsButton1.onClick.AddListener(JSButtonOneDown);
         jsButton2.onClick.AddListener(JSButtonTwoDown);
+        backButton.onClick.AddListener(SetBack);
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        if (aniContro==true)
+        if (aniContro == true)
         {
-            mi += Time.deltaTime * 100;
-            if (mi < 1)
+            mi += 1;
+            if (mi < 2)
             {
                 JsImage.sprite = jsShowImage[0];
             }
-            if (mi > 1)
+            if (mi > 2)
             {
                 JsImage.sprite = jsShowImage[1];
                 mi = 0;
             }
         }
+    }
+
+
+    public void SetBack()
+    {
+        toDoListCanvas.gameObject.SetActive(true);
+        clockPanelCanvas.gameObject.SetActive(false);
     }
 
     private void JSButtonTwoDown()

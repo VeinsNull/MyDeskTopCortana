@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +16,6 @@ public class ListObject : MonoBehaviour
         itemText = GetComponentInChildren<Text>();
         itemText.text = objName;
     }
-
 
     public void setObjectInfo(string name, int index)
     {

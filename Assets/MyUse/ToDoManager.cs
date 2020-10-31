@@ -14,6 +14,11 @@ using System.Collections;
 
 public class ToDoManager : MonoBehaviour
 {
+    [SerializeField]
+    private Transform toDoList;
+    [SerializeField]
+    private Transform clockPanel;
+
     public InputField todoListInput;//用户输入的任务
     public Transform content;//存放添加后的任务列表
     public GameObject ListItemPreFab;//用户任务列表预制体
@@ -99,10 +104,17 @@ public class ToDoManager : MonoBehaviour
         //为button的点击事件添加监听
         itemObject.transform.Find("abandon").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(tempItem); }));
         itemObject.transform.Find("complete").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(tempItem); }));
+        itemObject.transform.Find("clock").GetComponent<Button>().onClick.AddListener((delegate { InClock(); }));
         if (loding != true)
         {
             saveJsonData();
         }
+    }
+
+     void InClock()
+    {
+        clockPanel.gameObject.SetActive(true);
+        toDoList.gameObject.SetActive(false);
     }
 
     void CheckItem(ListObject item)
