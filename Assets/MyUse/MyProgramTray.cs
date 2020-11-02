@@ -5,11 +5,11 @@ using UnityEngine;
 public class MyProgramTray : MonoBehaviour
 {
 #if UNITY_STANDALONE_WIN
-	Tray tray;
+	NewTray tray;
 	private void Awake()
 	{
 		DontDestroyOnLoad(gameObject);
-		tray = new Tray();
+		tray = new NewTray();
 		tray.InitTray();
 	}
 	private void OnApplicationQuit()
@@ -17,5 +17,11 @@ public class MyProgramTray : MonoBehaviour
 		tray?.Dispose();
 		tray = null;
 	}
+
+	public void SetTipp()
+	{
+		tray.setTip();
+	}
+
 #endif
 }

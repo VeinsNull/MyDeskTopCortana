@@ -156,6 +156,7 @@ public class MyClockManager : MonoBehaviour
             yield return new WaitForSeconds(1f);
             fqTime -= 1;
         }
+        GetComponent<MyProgramTray>().SetTipp();
         FQRecover();
         yield break;
     }
