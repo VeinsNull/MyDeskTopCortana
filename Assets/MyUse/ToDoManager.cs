@@ -12,6 +12,20 @@ using System.Threading;
 using System;
 using System.Collections;
 
+public class listItemClass
+{
+    public string objName { get; set; }
+    public int index { get; set; }
+    public List<SubListClass> subdata { get; set; }
+}
+
+public class SubListClass
+{
+    public string objName { get; set; }
+    public int index { get; set; }
+    public bool isok { get; set; }
+}
+
 public class ToDoManager : MonoBehaviour
 {
     [SerializeField]
@@ -31,16 +45,7 @@ public class ToDoManager : MonoBehaviour
     bool buttonOk = false;
     bool downOk = false;
 
-    public class listItemClass
-    {
-        public string objName;
-        public int index;
-        public listItemClass(string name, int index)
-        {
-            this.objName = name;
-            this.index = index;
-        }
-    }
+
 
 
     void Start()
@@ -134,8 +139,18 @@ public class ToDoManager : MonoBehaviour
         string contents = "";
         for (int i = 0; i < ListObjects.Count; i++)
         {
-            listItemClass temp = new listItemClass(ListObjects[i].objName, ListObjects[i].index);
-            contents += JsonUtility.ToJson(temp) + "\n";
+            SubListClass temp1 = new SubListClass();
+            listItemClass temp2 = new listItemClass();
+            temp2.objName = ListObjects[i].objName;
+            temp2.index = ListObjects[i].index;
+            //for (int j = 0; j < ListObjects[i].; j++)
+            {
+
+            }
+
+            //temp2.subdata[i] = ListObjects[i].
+
+            //contents += JsonUtility.ToJson(temp2) + "\n";
         }
         File.WriteAllText(filePath, contents);
     }
