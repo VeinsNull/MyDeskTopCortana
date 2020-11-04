@@ -109,7 +109,7 @@ public class ToDoManager : MonoBehaviour
 
         //为button的点击事件添加监听
         itemObject.transform.Find("abandon").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(tempItem); }));
-        itemObject.transform.Find("complete").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(tempItem); }));
+        itemObject.transform.Find("ShowTree").GetComponent<Button>().onClick.AddListener((delegate { itemObject.ButtonClickTree(); }));
         itemObject.transform.Find("clock").GetComponent<Button>().onClick.AddListener((delegate { InClock(); }));
         if (loding != true)
         {
@@ -143,14 +143,11 @@ public class ToDoManager : MonoBehaviour
             listItemClass temp2 = new listItemClass();
             temp2.objName = ListObjects[i].objName;
             temp2.index = ListObjects[i].index;
-            //for (int j = 0; j < ListObjects[i].; j++)
+            for (int j = 0; j < ListObjects[i].subListClasses.Count; j++)
             {
-
+                temp2.subdata.Add(ListObjects[i].subListClasses[j]);
             }
-
-            //temp2.subdata[i] = ListObjects[i].
-
-            //contents += JsonUtility.ToJson(temp2) + "\n";
+            contents += JsonUtility.ToJson(temp2) + "\n";
         }
         File.WriteAllText(filePath, contents);
     }
