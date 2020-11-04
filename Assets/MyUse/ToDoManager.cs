@@ -17,6 +17,12 @@ public class listItemClass
     public string objName { get; set; }
     public int index { get; set; }
     public List<SubListClass> subdata { get; set; }
+    public listItemClass(string name, int index,List<SubListClass> sudata)
+    {
+        this.objName = name;
+        this.index = index;
+        this.subdata = sudata;
+    }
 }
 
 public class SubListClass
@@ -24,6 +30,12 @@ public class SubListClass
     public string objName { get; set; }
     public int index { get; set; }
     public bool isok { get; set; }
+    public SubListClass(string name, int index, bool isok)
+    {
+        this.objName = name;
+        this.index = index;
+        this.isok = isok;
+    }
 }
 
 public class ToDoManager : MonoBehaviour
@@ -138,17 +150,15 @@ public class ToDoManager : MonoBehaviour
     void saveJsonData()
     {
         string contents = "";
+        List<SubListClass> templist=new List<SubListClass>();
         for (int i = 0; i < ListObjects.Count; i++)
-        {
-            SubListClass temp1 = new SubListClass();
-            listItemClass temp2 = new listItemClass();
-            temp2.objName = ListObjects[i].objName;
-            temp2.index = ListObjects[i].index;
+        {        
             for (int j = 0; j < ListObjects[i].subListObjects.Count; j++)
             {
                 //需要写一个函数将obj转换为list
-                temp2.subdata.Add(ObjTOLClass(ListObjects[i].subListObjects[j]));
+                templist.Add(ObjTOLClass(ListObjects[i].subListObjects[j]));
             }
+            listItemClass temp2 = new listItemClass(ListObjects[i].objName, ListObjects[i].index,templist);
             contents += JsonUtility.ToJson(temp2) + "\n";
         }
         File.WriteAllText(filePath, contents);
@@ -156,10 +166,7 @@ public class ToDoManager : MonoBehaviour
 
     SubListClass ObjTOLClass(SubListObject sublistobj)
     {
-        SubListClass sublistclass = new SubListClass();
-        sublistclass.index = sublistobj.index;
-        sublistclass.objName = sublistobj.objName;
-        sublistclass.isok = sublistobj.isok;
+        SubListClass sublistclass = new SubListClass(sublistobj.objName, sublistobj.index, sublistobj.isok);
         return sublistclass;
     }
 
@@ -221,7 +228,7 @@ public class ToDoManager : MonoBehaviour
     void UpdateCould()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("");
+        IPAddress ip = IPAddress.Parse("108.61.23.214");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
@@ -250,7 +257,7 @@ public class ToDoManager : MonoBehaviour
     void CouldDown()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("");
+        IPAddress ip = IPAddress.Parse("108.61.23.214");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {

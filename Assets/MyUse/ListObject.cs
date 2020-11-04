@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,9 @@ public class ListObject : MonoBehaviour
     private void Start()
     {
         this.GetComponentInChildren<Text>().text = objName;
+        myWriteSon = Instantiate(writeSonInfo, this.transform.parent);
+        myWriteSon.transform.GetComponentInChildren<Button>().onClick.AddListener(ButtonClickAddTreeInfoOK);
+        myWriteSon.SetActive(false);
     }
 
 
@@ -34,13 +38,12 @@ public class ListObject : MonoBehaviour
     public void ButtonClickAddTreeInfoOK()
     {
         //用户输入完成信息后
-        GameObject tempobj = Instantiate(showSonInfo);
-        tempobj.GetComponentInChildren<SubListObject>().setSubObjectInfo(writeSonInfo.GetComponentInChildren<InputField>().text,
+        GameObject tempobj = Instantiate(showSonInfo, this.transform.parent);
+        tempobj.GetComponentInChildren<SubListObject>().setSubObjectInfo(myWriteSon.GetComponentInChildren<InputField>().text,
             countSon, false, this.gameObject);
         subListObjects.Add(tempobj.GetComponent<SubListObject>());
+        myWriteSon.GetComponentInChildren<InputField>().text = "";
         countSon += 1;
-        //更新一下子级菜单列表
-        ButtonClickTreeShow();
     }
 
     public void ButtonClickTree()
@@ -62,24 +65,21 @@ public class ListObject : MonoBehaviour
     {
         //调节content列表
 
-        myWriteSon = null;
-        //生成子菜单
-        myWriteSon = Instantiate(Resources.Load<GameObject>("writeSonInfo"), this.transform.parent);
-        myWriteSon.transform.GetComponentInChildren<Button>().onClick.AddListener(ButtonClickAddTreeInfoOK);
 
+        //生成子菜单
+        myWriteSon.SetActive(true);
         for (int i = 0; i < subListObjects.Count; i++)
         {
-            GameObject temp2 = Instantiate(Resources.Load<GameObject>("ShowSonInfo"),this.transform.parent);
-            temp2.GetComponent<SubListObject>().setSubObjectInfo(
-               subListObjects[i].objName, subListObjects[i].index, subListObjects[i].isok, this.gameObject);
+            subListObjects[i].gameObject.SetActive(true);
         }
     }
 
     private void ButtonClickTreeHide()
     {
-        for (int i = subListObjects.Count; i >0; i--)
+        myWriteSon.SetActive(false);
+        for (int i = 0; i < subListObjects.Count; i++)
         {
-            Destroy(subListObjects[i].gameObject);
+            subListObjects[i].gameObject.SetActive(false);
         }
     }
 
