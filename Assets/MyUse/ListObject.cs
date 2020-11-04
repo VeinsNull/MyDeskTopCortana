@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,23 +7,20 @@ public class ListObject : MonoBehaviour
 {
     public string objName;
     public int index;
-    public List<SubListClass> subListClasses;
+
     public GameObject writeSonInfo;
     public GameObject showSonInfo;
+    public int countSon=0;//添加子菜单数量
 
-    private int countSon=0;//添加子菜单数量
+    public List<SubListObject> subListObjects;
 
-    int ccount=0;
+    public GameObject myWriteSon;
+    int ccount=0;//用来记录用户按下按键次数  
 
-    List<Transform> sublist;//实例化生成的子级菜单
-    
-
-    private Text itemText;
 
     private void Start()
     {
-        itemText = GetComponentInChildren<Text>();
-        itemText.text = objName;
+        this.GetComponentInChildren<Text>().text = objName;
     }
 
 
@@ -36,35 +34,12 @@ public class ListObject : MonoBehaviour
     public void ButtonClickAddTreeInfoOK()
     {
         //用户输入完成信息后
-        SubListClass subList=new SubListClass();
-        subList.objName = writeSonInfo.GetComponentInChildren<InputField>().text;
-        subList.index = countSon;
-        subList.isok = false;
-        subListClasses.Add(subList);
+        GameObject tempobj = Instantiate(showSonInfo);
+        tempobj.GetComponentInChildren<SubListObject>().setSubObjectInfo(writeSonInfo.GetComponentInChildren<InputField>().text,
+            countSon, false, this.gameObject);
+        subListObjects.Add(tempobj.GetComponent<SubListObject>());
         countSon += 1;
-        Instantiate(showSonInfo);
-        showSonInfo.GetComponentInChildren<Text>().text = subList.objName;
-        showSonInfo.GetComponentInChildren<Toggle>().isOn = subList.isok;
         //更新一下子级菜单列表
-        ButtonClickTreeShow();
-    }
-
-
-    public void ButtonClickAddTree()
-    {
-        //用户按下添加按钮
-        ButtonClickTreeShow();
-    }
-
-
-
-    public void ButtonClickDeletTree()
-    {
-        //用户按下删除按钮,找到list记录删除掉，
-
-        //并销毁按钮的父物体
-
-        //然后更新子级菜单列表
         ButtonClickTreeShow();
     }
 
@@ -83,32 +58,29 @@ public class ListObject : MonoBehaviour
         }
     }
 
-    private void ButtonClickTreeShow()
+    public void ButtonClickTreeShow()
     {
         //调节content列表
 
+        myWriteSon = null;
         //生成子菜单
-        GameObject temp1 = Instantiate(Resources.Load<GameObject>("writeSonInfo"), this.transform.parent);
-        temp1.transform.GetComponent<Button>().onClick.AddListener(ButtonClickAddTree);
-        sublist.Add(temp1.transform);
-        for (int i = 0; i < subListClasses.Count; i++)
+        myWriteSon = Instantiate(Resources.Load<GameObject>("writeSonInfo"), this.transform.parent);
+        myWriteSon.transform.GetComponentInChildren<Button>().onClick.AddListener(ButtonClickAddTreeInfoOK);
+
+        for (int i = 0; i < subListObjects.Count; i++)
         {
             GameObject temp2 = Instantiate(Resources.Load<GameObject>("ShowSonInfo"),this.transform.parent);
-            temp2.transform.GetComponentInChildren<Text>().text = subListClasses[i].objName;
-            temp2.transform.GetComponentInChildren<Toggle>().isOn = subListClasses[i].isok;
-            temp2.transform.GetComponent<Button>().onClick.AddListener(ButtonClickDeletTree);
-            sublist.Add(temp2.transform);
+            temp2.GetComponent<SubListObject>().setSubObjectInfo(
+               subListObjects[i].objName, subListObjects[i].index, subListObjects[i].isok, this.gameObject);
         }
     }
 
     private void ButtonClickTreeHide()
     {
-        for (int i = sublist.Count; i >0; i--)
+        for (int i = subListObjects.Count; i >0; i--)
         {
-            Destroy(sublist[i].gameObject);
-            sublist.Remove(sublist[i].transform);
+            Destroy(subListObjects[i].gameObject);
         }
-        sublist.Clear();
     }
 
 }

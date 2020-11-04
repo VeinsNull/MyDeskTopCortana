@@ -129,6 +129,7 @@ public class ToDoManager : MonoBehaviour
         ListObjects.Remove(item);
         saveJsonData();
         Destroy(item.gameObject);
+        Destroy(item.myWriteSon.gameObject);
     }
 
     /// <summary>
@@ -143,13 +144,23 @@ public class ToDoManager : MonoBehaviour
             listItemClass temp2 = new listItemClass();
             temp2.objName = ListObjects[i].objName;
             temp2.index = ListObjects[i].index;
-            for (int j = 0; j < ListObjects[i].subListClasses.Count; j++)
+            for (int j = 0; j < ListObjects[i].subListObjects.Count; j++)
             {
-                temp2.subdata.Add(ListObjects[i].subListClasses[j]);
+                //需要写一个函数将obj转换为list
+                temp2.subdata.Add(ObjTOLClass(ListObjects[i].subListObjects[j]));
             }
             contents += JsonUtility.ToJson(temp2) + "\n";
         }
         File.WriteAllText(filePath, contents);
+    }
+
+    SubListClass ObjTOLClass(SubListObject sublistobj)
+    {
+        SubListClass sublistclass = new SubListClass();
+        sublistclass.index = sublistobj.index;
+        sublistclass.objName = sublistobj.objName;
+        sublistclass.isok = sublistobj.isok;
+        return sublistclass;
     }
 
     /// <summary>
@@ -195,14 +206,14 @@ public class ToDoManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("请隔3秒后再试");
+            Debug.Log("请隔1秒后再试");
         }   
     }
 
     IEnumerator WaitTime()
     {
         buttonOk = false;
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(1f);
         buttonOk = true;
         yield break;
     }
