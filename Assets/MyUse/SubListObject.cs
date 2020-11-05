@@ -8,6 +8,7 @@ public class SubListObject : MonoBehaviour
     public string objName;
     public int index;
     public bool isok;
+
     public GameObject myParentObj;//我的父级对象
 
     Button delButton;

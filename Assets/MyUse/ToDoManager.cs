@@ -12,24 +12,27 @@ using System.Threading;
 using System;
 using System.Collections;
 
+[Serializable]
 public class listItemClass
 {
-    public string objName { get; set; }
-    public int index { get; set; }
-    public List<SubListClass> subdata { get; set; }
+    public string objName;
+    public int index;
+    public List<SubListClass> sub;
     public listItemClass(string name, int index,List<SubListClass> sudata)
     {
         this.objName = name;
         this.index = index;
-        this.subdata = sudata;
+        //list被json转化后的string字符串
+        this.sub = sudata;
     }
 }
 
+[Serializable]
 public class SubListClass
 {
-    public string objName { get; set; }
-    public int index { get; set; }
-    public bool isok { get; set; }
+    public string objName;
+    public int index;
+    public bool isok;
     public SubListClass(string name, int index, bool isok)
     {
         this.objName = name;
@@ -37,6 +40,8 @@ public class SubListClass
         this.isok = isok;
     }
 }
+
+
 
 public class ToDoManager : MonoBehaviour
 {
@@ -101,7 +106,7 @@ public class ToDoManager : MonoBehaviour
     /// <param name="temp"></param>
     /// <param name="loadIndex"></param>
     /// <param name="loding"></param>
-    private void CreateListItem(string temp, int loadIndex = 0, bool loding = false)
+    private void CreateListItem(string temp, int loadIndex = 0, bool loding = false, listItemClass listclass=null)
     {
         //实例化清单
         GameObject item = Instantiate(ListItemPreFab);
@@ -114,13 +119,22 @@ public class ToDoManager : MonoBehaviour
             index = ListObjects.Count;
         }
         itemObject.setObjectInfo(temp, index);
+        
         //为清单上的信息赋值
         item.GetComponentInChildren<Text>().text = temp;
+        if (listclass != null)
+        {   //清除之前的老信息，添加新信息
+            itemObject.sublistcalss.Clear();
+            for (int i = 0; i < listclass.sub.Count; i++)
+            {
+                SubListClass subobj = new SubListClass(listclass.sub[i].objName,listclass.sub[i].index, listclass.sub[i].isok);
+                itemObject.sublistcalss.Add(subobj);
+            }            
+        }
         ListObjects.Add(itemObject);
-        ListObject tempItem = itemObject;
 
         //为button的点击事件添加监听
-        itemObject.transform.Find("abandon").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(tempItem); }));
+        itemObject.transform.Find("abandon").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(itemObject); }));
         itemObject.transform.Find("ShowTree").GetComponent<Button>().onClick.AddListener((delegate { itemObject.ButtonClickTree(); }));
         itemObject.transform.Find("clock").GetComponent<Button>().onClick.AddListener((delegate { InClock(); }));
         if (loding != true)
@@ -154,13 +168,14 @@ public class ToDoManager : MonoBehaviour
         for (int i = 0; i < ListObjects.Count; i++)
         {        
             for (int j = 0; j < ListObjects[i].subListObjects.Count; j++)
-            {
+            {              
                 //需要写一个函数将obj转换为list
                 templist.Add(ObjTOLClass(ListObjects[i].subListObjects[j]));
             }
             listItemClass temp2 = new listItemClass(ListObjects[i].objName, ListObjects[i].index,templist);
             contents += JsonUtility.ToJson(temp2) + "\n";
         }
+        Debug.Log(contents);
         File.WriteAllText(filePath, contents);
     }
 
@@ -183,13 +198,15 @@ public class ToDoManager : MonoBehaviour
         string dataAsJson = "";
         dataAsJson = ReadJsonFun();
 
+        // 正确解析json文件
         string[] splitContents = dataAsJson.Split('\n');
         foreach (string content in splitContents)
         {
             if (content.Trim() != "")
             {
                 listItemClass temp = JsonUtility.FromJson<listItemClass>(content.Trim());
-                CreateListItem(temp.objName, temp.index, true);
+                //先只创建父级任务，然后将子任务信息存到父级任务的listObject脚本中去。
+                CreateListItem(temp.objName, temp.index, true,temp);
             }
         }
     }

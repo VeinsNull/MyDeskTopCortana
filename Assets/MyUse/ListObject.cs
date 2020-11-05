@@ -13,6 +13,7 @@ public class ListObject : MonoBehaviour
     public GameObject showSonInfo;
     public int countSon=0;//添加子菜单数量
 
+    public List<SubListClass> sublistcalss;
     public List<SubListObject> subListObjects;
 
     public GameObject myWriteSon;
@@ -38,12 +39,24 @@ public class ListObject : MonoBehaviour
     public void ButtonClickAddTreeInfoOK()
     {
         //用户输入完成信息后
-        GameObject tempobj = Instantiate(showSonInfo, this.transform.parent);
-        tempobj.GetComponentInChildren<SubListObject>().setSubObjectInfo(myWriteSon.GetComponentInChildren<InputField>().text,
-            countSon, false, this.gameObject);
-        subListObjects.Add(tempobj.GetComponent<SubListObject>());
+        CreateSubListItem(myWriteSon.GetComponentInChildren<InputField>().text,
+             false, countSon);
         myWriteSon.GetComponentInChildren<InputField>().text = "";
         countSon += 1;
+    }
+
+    private void CreateSubListItem(string temp, bool isok,int loadIndex = 0,bool Show=false)
+    {
+        GameObject subtemp = Instantiate(showSonInfo, this.transform.parent);
+        SubListObject subtempObj = subtemp.GetComponent<SubListObject>();      
+        if(Show==true)
+        {
+            SubListClass subtempClas = new SubListClass(temp, loadIndex, isok);
+            sublistcalss.Add(subtempClas);
+        }  
+        int index = sublistcalss.Count;
+        subtempObj.setSubObjectInfo(temp, loadIndex, isok,this.gameObject);
+        subListObjects.Add(subtempObj);      
     }
 
     public void ButtonClickTree()
@@ -68,9 +81,10 @@ public class ListObject : MonoBehaviour
 
         //生成子菜单
         myWriteSon.SetActive(true);
-        for (int i = 0; i < subListObjects.Count; i++)
+
+        for (int i = 0; i < sublistcalss.Count; i++)
         {
-            subListObjects[i].gameObject.SetActive(true);
+            //CreateSubListItem()
         }
     }
 
