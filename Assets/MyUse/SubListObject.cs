@@ -56,6 +56,7 @@ public class SubListObject : MonoBehaviour
             if (myParentObj.GetComponent<ListObject>().sublistcalss[i].index == this.index)
             {
                 myParentObj.GetComponent<ListObject>().sublistcalss[i].isok = this.isok;
+                myParentObj.transform.parent.parent.parent.parent.parent.GetComponent<ToDoManager>().saveJsonData();
             }
         }
     }

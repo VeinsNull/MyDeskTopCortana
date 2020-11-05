@@ -158,7 +158,6 @@ public class ToDoManager : MonoBehaviour
         {
             for (int i = item.subListObjects.Count; i > 0; i--)
             {
-                //Destroy(item.subListObjects[i - 1].gameObject);
                 item.subListObjects[i - 1].gameObject.GetComponent<SubListObject>().DelButtonClick();
             }
             item.sublistcalss.Clear();
@@ -178,17 +177,16 @@ public class ToDoManager : MonoBehaviour
         List<SubListClass> templist=new List<SubListClass>();
         for (int i = 0; i < ListObjects.Count; i++)
         {
-            if (ListObjects[i].sublistcalss.Count != 0)
+            if (ListObjects[i].sublistcalss.Count > 0)
             {
                 for (int j = 0; j < ListObjects[i].sublistcalss.Count; j++)
                 {
-                    //需要写一个函数将obj转换为list
                     templist.Add(ListObjects[i].sublistcalss[j]);
                 }
             }           
             listItemClass temp2 = new listItemClass(ListObjects[i].objName, ListObjects[i].index,templist);
             contents += JsonUtility.ToJson(temp2) + "\n";
-            templist = null;
+            templist.Clear();
         }
         Debug.Log(contents);
         File.WriteAllText(filePath, contents);

@@ -55,7 +55,8 @@ public class ListObject : MonoBehaviour
         }  
         int index = sublistcalss.Count;
         subtempObj.setSubObjectInfo(temp, loadIndex, isok,this.gameObject);
-        subListObjects.Add(subtempObj);       
+        subListObjects.Add(subtempObj);
+        this.transform.parent.parent.parent.parent.parent.GetComponent<ToDoManager>().saveJsonData();
     }
 
     public void ButtonClickTree()
