@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Unity.Collections;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,12 +17,12 @@ public class ListObject : MonoBehaviour
     public GameObject myWriteSon;
     int ccount=0;//用来记录用户按下按键次数  
 
-
     private void Start()
     {
         this.GetComponentInChildren<Text>().text = objName;
         myWriteSon = Instantiate(writeSonInfo, this.transform.parent);
         myWriteSon.transform.GetComponentInChildren<Button>().onClick.AddListener(ButtonClickAddTreeInfoOK);
+        myWriteSon.transform.SetSiblingIndex(this.transform.GetSiblingIndex() + 1);
         myWriteSon.SetActive(false);
     }
 
@@ -40,23 +38,24 @@ public class ListObject : MonoBehaviour
     {
         //用户输入完成信息后
         CreateSubListItem(myWriteSon.GetComponentInChildren<InputField>().text,
-             false, countSon);
-        myWriteSon.GetComponentInChildren<InputField>().text = "";
-        countSon += 1;
+             false, countSon,true);
+        myWriteSon.GetComponentInChildren<InputField>().text = "";       
     }
 
-    private void CreateSubListItem(string temp, bool isok,int loadIndex = 0,bool Show=false)
+    private void CreateSubListItem(string temp, bool isok,int loadIndex = 0,bool addClass=false)
     {
         GameObject subtemp = Instantiate(showSonInfo, this.transform.parent);
-        SubListObject subtempObj = subtemp.GetComponent<SubListObject>();      
-        if(Show==true)
+        SubListObject subtempObj = subtemp.GetComponent<SubListObject>();
+        countSon += 1;
+        subtemp.transform.SetSiblingIndex(this.transform.GetSiblingIndex() + 1 + countSon);
+        if(addClass==true)
         {
             SubListClass subtempClas = new SubListClass(temp, loadIndex, isok);
             sublistcalss.Add(subtempClas);
         }  
         int index = sublistcalss.Count;
         subtempObj.setSubObjectInfo(temp, loadIndex, isok,this.gameObject);
-        subListObjects.Add(subtempObj);      
+        subListObjects.Add(subtempObj);       
     }
 
     public void ButtonClickTree()
@@ -84,17 +83,19 @@ public class ListObject : MonoBehaviour
 
         for (int i = 0; i < sublistcalss.Count; i++)
         {
-            //CreateSubListItem()
+            CreateSubListItem(sublistcalss[i].objName, sublistcalss[i].isok, sublistcalss[i].index,false);
         }
     }
 
     private void ButtonClickTreeHide()
     {
         myWriteSon.SetActive(false);
-        for (int i = 0; i < subListObjects.Count; i++)
+        for (int i = subListObjects.Count; i > 0; i--)
         {
-            subListObjects[i].gameObject.SetActive(false);
+            Destroy(subListObjects[i-1].transform.gameObject);
         }
+        subListObjects.Clear();
+        countSon = 0;
     }
 
 }

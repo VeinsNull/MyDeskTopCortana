@@ -85,9 +85,9 @@ public class ToDoManager : MonoBehaviour
     {
         if (downOk)
         {
-            //从服务器上下载数据
-            loadJsonData();
             downOk = false;
+            //从服务器上下载数据
+            loadJsonData();           
         }         
     }
 
@@ -124,6 +124,9 @@ public class ToDoManager : MonoBehaviour
         item.GetComponentInChildren<Text>().text = temp;
         if (listclass != null)
         {   //清除之前的老信息，添加新信息
+
+            //查找名字符合的
+
             itemObject.sublistcalss.Clear();
             for (int i = 0; i < listclass.sub.Count; i++)
             {
@@ -150,39 +153,45 @@ public class ToDoManager : MonoBehaviour
     }
 
     void CheckItem(ListObject item)
-    {
-        Debug.Log("执行删除信息");
+    {   
+        if (item.subListObjects != null)
+        {
+            for (int i = item.subListObjects.Count; i > 0; i--)
+            {
+                //Destroy(item.subListObjects[i - 1].gameObject);
+                item.subListObjects[i - 1].gameObject.GetComponent<SubListObject>().DelButtonClick();
+            }
+            item.sublistcalss.Clear();
+        }
         ListObjects.Remove(item);
-        saveJsonData();
         Destroy(item.gameObject);
         Destroy(item.myWriteSon.gameObject);
+        saveJsonData();
     }
 
     /// <summary>
     /// 从储存清单列表的列表中读取数据写入到json文件中
     /// </summary>
-    void saveJsonData()
+    public void saveJsonData()
     {
         string contents = "";
         List<SubListClass> templist=new List<SubListClass>();
         for (int i = 0; i < ListObjects.Count; i++)
-        {        
-            for (int j = 0; j < ListObjects[i].subListObjects.Count; j++)
-            {              
-                //需要写一个函数将obj转换为list
-                templist.Add(ObjTOLClass(ListObjects[i].subListObjects[j]));
-            }
+        {
+            if (ListObjects[i].sublistcalss.Count != 0)
+            {
+                for (int j = 0; j < ListObjects[i].sublistcalss.Count; j++)
+                {
+                    //需要写一个函数将obj转换为list
+                    templist.Add(ListObjects[i].sublistcalss[j]);
+                }
+            }           
             listItemClass temp2 = new listItemClass(ListObjects[i].objName, ListObjects[i].index,templist);
             contents += JsonUtility.ToJson(temp2) + "\n";
+            templist = null;
         }
         Debug.Log(contents);
         File.WriteAllText(filePath, contents);
-    }
-
-    SubListClass ObjTOLClass(SubListObject sublistobj)
-    {
-        SubListClass sublistclass = new SubListClass(sublistobj.objName, sublistobj.index, sublistobj.isok);
-        return sublistclass;
     }
 
     /// <summary>

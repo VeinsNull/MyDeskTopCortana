@@ -34,10 +34,11 @@ public class SubListObject : MonoBehaviour
 
     public void DelButtonClick()
     {
+        SubListClass litstemp = new SubListClass(this.objName, this.index, this.isok);
+        myParentObj.GetComponent<ListObject>().sublistcalss.Remove(litstemp);
         myParentObj.GetComponent<ListObject>().subListObjects.Remove(this.GetComponent<SubListObject>());
         myParentObj.GetComponent<ListObject>().countSon -= 1;
         Destroy(this.gameObject);
-        myParentObj.GetComponent<ListObject>().ButtonClickTreeShow();
     }
 
     public void FlagButtonClick()
@@ -48,6 +49,13 @@ public class SubListObject : MonoBehaviour
             if (myParentObj.GetComponent<ListObject>().subListObjects[i].index == this.index)
             {
                 myParentObj.GetComponent<ListObject>().subListObjects[i].isok = this.isok;
+            }
+        }
+        for (int i = 0; i < myParentObj.GetComponent<ListObject>().sublistcalss.Count; i++)
+        {
+            if (myParentObj.GetComponent<ListObject>().sublistcalss[i].index == this.index)
+            {
+                myParentObj.GetComponent<ListObject>().sublistcalss[i].isok = this.isok;
             }
         }
     }
