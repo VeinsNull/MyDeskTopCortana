@@ -52,6 +52,20 @@ public class MyClockManager : MonoBehaviour
         jsButton2.onClick.AddListener(JSButtonTwoDown);
         backButton.onClick.AddListener(SetBack);
     }
+    
+    void OnEnable()
+    {
+    #if UNITY_ANDROID
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+    #endif
+    }
+
+    void OnDisable()
+    {
+    #if UNITY_ANDROID
+        Screen.sleepTimeout = SleepTimeout.SystemSetting;
+    #endif
+    }
 
     void FixedUpdate()
     {
