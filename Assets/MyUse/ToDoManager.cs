@@ -109,9 +109,7 @@ public class ToDoManager : MonoBehaviour
     private void CreateListItem(string temp, int loadIndex = 0, bool loding = false, listItemClass listclass=null)
     {
         //实例化清单
-        GameObject item = Instantiate(ListItemPreFab);
-        //设为滑动列表的子物体
-        item.transform.SetParent(content);
+        GameObject item = Instantiate(ListItemPreFab, content);
         ListObject itemObject = item.GetComponent<ListObject>();
         int index = 0;
         if (loding != true)
@@ -197,9 +195,12 @@ public class ToDoManager : MonoBehaviour
     /// </summary>
     void loadJsonData()
     {
-        for (int i = 0; i < content.childCount; i++)
+        if(content.childCount>0)
         {
-            Destroy(content.GetChild(i).gameObject);
+            for (int i = 0; i < content.childCount; i++)
+            {
+                Destroy(content.GetChild(i).gameObject);
+            }
         }
         ListObjects.Clear();
         string dataAsJson = "";

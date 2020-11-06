@@ -35,10 +35,12 @@ public class SubListObject : MonoBehaviour
     public void DelButtonClick()
     {
         SubListClass litstemp = new SubListClass(this.objName, this.index, this.isok);
-        myParentObj.GetComponent<ListObject>().sublistcalss.Remove(litstemp);
+        myParentObj.GetComponent<ListObject>().sublistcalss.RemoveAll(s => (s.objName == this.objName));
         myParentObj.GetComponent<ListObject>().subListObjects.Remove(this.GetComponent<SubListObject>());
         myParentObj.GetComponent<ListObject>().countSon -= 1;
+        myParentObj.transform.parent.parent.parent.parent.parent.GetComponent<ToDoManager>().saveJsonData();
         Destroy(this.gameObject);
+        
     }
 
     public void FlagButtonClick()
@@ -51,9 +53,9 @@ public class SubListObject : MonoBehaviour
                 myParentObj.GetComponent<ListObject>().subListObjects[i].isok = this.isok;
             }
         }
-        for (int i = 0; i < myParentObj.GetComponent<ListObject>().sublistcalss.Count; i++)
+        for (int i = 0 ; i < myParentObj.GetComponent<ListObject>().sublistcalss.Count ; i++)
         {
-            if (myParentObj.GetComponent<ListObject>().sublistcalss[i].index == this.index)
+            if (myParentObj.GetComponent<ListObject>().sublistcalss[i].objName == this.objName)
             {
                 myParentObj.GetComponent<ListObject>().sublistcalss[i].isok = this.isok;
                 myParentObj.transform.parent.parent.parent.parent.parent.GetComponent<ToDoManager>().saveJsonData();
