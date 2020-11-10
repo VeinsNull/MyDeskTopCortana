@@ -297,9 +297,10 @@ public class ToDoManager : MonoBehaviour
         #endregion
         //封装到函数里由unity的button事件调用
         clientSocket.Send(Encoding.UTF8.GetBytes("下载"));//向服务器发送数据，需要发送中文则需要使用Encoding.UTF8.GetBytes()，否则会乱码
-                                                        //发送完下载命令后，准备接收服务端发过来的数据
+        //发送完下载命令后，准备接收服务端发过来的数据
+        //！待解决问题：当传输数据过多时，数据丢失现象
         string recvStr = "";
-        byte[] recvBytes = new byte[1024];
+        byte[] recvBytes = new byte[10240];
         int bytes;
         bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
         recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
