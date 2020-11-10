@@ -253,7 +253,7 @@ public class ToDoManager : MonoBehaviour
     void UpdateCould()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("108.61.23.214");
+        IPAddress ip = IPAddress.Parse("");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
@@ -282,7 +282,7 @@ public class ToDoManager : MonoBehaviour
     void CouldDown()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("108.61.23.214");
+        IPAddress ip = IPAddress.Parse("");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
