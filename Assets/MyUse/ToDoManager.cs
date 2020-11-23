@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
-using UnityEngine.Networking;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
@@ -137,16 +136,17 @@ public class ToDoManager : MonoBehaviour
         //为button的点击事件添加监听
         itemObject.transform.Find("abandon").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(itemObject); }));
         itemObject.transform.Find("ShowTree").GetComponent<Button>().onClick.AddListener((delegate { itemObject.ButtonClickTree(); }));
-        itemObject.transform.Find("clock").GetComponent<Button>().onClick.AddListener((delegate { InClock(); }));
+        itemObject.transform.Find("clock").GetComponent<Button>().onClick.AddListener((delegate { InClock(temp); }));
         if (loding != true)
         {
             saveJsonData();
         }
     }
 
-     void InClock()
+     void InClock(string obj)
     {
         clockPanel.gameObject.SetActive(true);
+        clockPanel.Find("InputTaskName").GetComponent<InputField>().text = obj;
         toDoList.gameObject.SetActive(false);
     }
 

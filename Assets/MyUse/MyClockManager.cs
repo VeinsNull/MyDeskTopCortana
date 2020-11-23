@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using UnityEngine;
 using UnityEngine.UI;
+
+//1.声明两个类，用作json结构。
+//2.此类主要贮存两个信息 ①总使用时长 ②每个任务所用时长。
+//3.信息的存储读取
+
 
 public class MyClockManager : MonoBehaviour
 {
@@ -41,6 +44,7 @@ public class MyClockManager : MonoBehaviour
     private Transform clockPanelCanvas;
 
     public float LoadingImage { get; private set; }//用来分享进度，用来控制人物透明度
+
 
     void Start()
     {
