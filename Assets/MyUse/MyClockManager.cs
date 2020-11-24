@@ -1,11 +1,26 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-//1.声明两个类，用作json结构。
-//2.此类主要贮存两个信息 ①总使用时长 ②每个任务所用时长。
 //3.信息的存储读取
+
+[Serializable]
+public class ClockList
+{
+    public int totalTimer;
+    public List<SubClockList> sub;
+}
+
+[Serializable]
+public class SubClockList
+{
+    public string subName;
+    public int subTimer;
+}
 
 
 public class MyClockManager : MonoBehaviour
@@ -20,6 +35,7 @@ public class MyClockManager : MonoBehaviour
     private Button fqButton;//番茄钟的开始button
     private int fqButtonCount = 0;//番茄钟按钮按下计数 
     private int fqTime;
+    private int fqTimee;
 
     [SerializeField]
     private Text jstimeText;//用来显示计时器时间
@@ -43,6 +59,12 @@ public class MyClockManager : MonoBehaviour
     [SerializeField]
     private Transform clockPanelCanvas;
 
+    public ClockList clockList;
+    public List<SubClockList> subClockList;
+
+    string filePath;//存放同步的json文件
+    string jsonName = "ClockTime.json";
+
     public float LoadingImage { get; private set; }//用来分享进度，用来控制人物透明度
 
 
@@ -55,20 +77,34 @@ public class MyClockManager : MonoBehaviour
         jsButton1.onClick.AddListener(JSButtonOneDown);
         jsButton2.onClick.AddListener(JSButtonTwoDown);
         backButton.onClick.AddListener(SetBack);
+        clockList = new ClockList();
+        subClockList = new List<SubClockList>();
+
+
+        //程序一开始找到json文件目录，并赋值给filepath；
+        if (Application.platform == RuntimePlatform.Android)
+        {
+            filePath = Path.Combine(Application.persistentDataPath, jsonName);
+        }
+        else if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
+        {
+            filePath = @"D:\ClockTime.json";
+        }
+        loadJsonData();
     }
-    
+
     void OnEnable()
     {
-    #if UNITY_ANDROID
+#if UNITY_ANDROID
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
-    #endif
+#endif
     }
 
     void OnDisable()
     {
-    #if UNITY_ANDROID
+#if UNITY_ANDROID
         Screen.sleepTimeout = SleepTimeout.SystemSetting;
-    #endif
+#endif
     }
 
     void FixedUpdate()
@@ -98,6 +134,17 @@ public class MyClockManager : MonoBehaviour
     private void JSButtonTwoDown()
     {
         //用户按下结束键，停止计时，时间归零
+        clockList.totalTimer += (jsTime/60);
+        SubClockList temp = new SubClockList();
+        temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
+        temp.subTimer = (jsTime/60);
+        subClockList.Add(temp);
+        if(subClockList.Count>0)
+        {
+            clockList.sub = subClockList;
+        }
+        saveJsonData();
+
         StopCoroutine("JSTimeCoro");
         jsTime = 0;
         jstimeText.text = "";
@@ -155,24 +202,25 @@ public class MyClockManager : MonoBehaviour
             //如果用户按下了停止按键，一切恢复初始值
             FQRecover();
             StopCoroutine("FQTimeCoro");
-            fqButtonCount = 0;
+            fqButtonCount = 0;          
         }
     }
 
     IEnumerator FQTimeCoro()
     {
         int copyTime = fqTime;
-        while (fqTime > 0)
+        fqTimee = fqTime;
+        while (fqTimee > 0)
         {
-            TimeSpan ts = new TimeSpan(0, 0, fqTime);
+            TimeSpan ts = new TimeSpan(0, 0, fqTimee);
             //文本显示时间
-            fqtimeText.text = string.Format("{0}:{1}:{2}",ts.Hours, ts.Minutes, ts.Seconds);
+            fqtimeText.text = string.Format("{0}:{1}:{2}", ts.Hours, ts.Minutes, ts.Seconds);
             //计算时间加载进度
-            float tempTime = (float)Math.Round((float)(copyTime - fqTime) / copyTime, 4);
+            float tempTime = (float)Math.Round((float)(copyTime - fqTimee) / copyTime, 4);
             fqImage.fillAmount = tempTime;
             LoadingImage = tempTime;
             yield return new WaitForSeconds(1f);
-            fqTime -= 1;
+            fqTimee -= 1;
         }
         GetComponent<MyProgramTray>().SetTipp();
         FQRecover();
@@ -181,11 +229,65 @@ public class MyClockManager : MonoBehaviour
 
     void FQRecover()
     {
+        clockList.totalTimer += ((fqTime-fqTimee) / 60);
+        SubClockList temp = new SubClockList();
+        temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
+        temp.subTimer = ((fqTime - fqTimee) / 60);
+        subClockList.Add(temp);
+        if (subClockList.Count > 0)
+        {
+            clockList.sub = subClockList;
+        }
+
+        saveJsonData();
         fqButton.GetComponentInChildren<Text>().text = "开始";
         fqTime = 0;
+        fqTimee = 0;
         fqImage.fillAmount = 1;
         fqtimeText.text = "";
         fqTimeInfo.text = "";
         LoadingImage = 1;
+    }
+
+
+    /// <summary>
+    /// 从列表中读取数据写入到json文件中
+    /// </summary>
+    private void saveJsonData()
+    {
+        string contents = "";
+        contents = JsonUtility.ToJson(clockList) + "\n";
+        Debug.Log(contents);
+        File.WriteAllText(filePath, contents);
+    }
+
+    /// <summary>
+    /// 从存储中加载json文件
+    /// </summary>
+    public void loadJsonData()
+    {
+        string dataAsJson = "";
+        dataAsJson = ReadJsonFun();
+
+        // 正确解析json文件
+        string[] splitContents = dataAsJson.Split('\n');
+        foreach (string content in splitContents)
+        {
+            if (content.Trim() != "")
+            {
+                ClockList temp = JsonUtility.FromJson<ClockList>(content.Trim());
+                clockList = temp;
+            }
+        }
+    }
+
+    string ReadJsonFun()
+    {
+        string dataAsJson = File.ReadAllText(filePath, Encoding.UTF8);
+        if (dataAsJson == null)
+        {
+            return "";
+        }
+        return dataAsJson;
     }
 }

@@ -54,7 +54,7 @@ public class ToDoManager : MonoBehaviour
     public GameObject ListItemPreFab;//用户任务列表预制体
 
     string filePath;//存放同步的json文件
-    string jsonName = "1.json";
+    string jsonName = "List.json";
     Thread connectThread;
     private List<ListObject> ListObjects = new List<ListObject>();
 
@@ -74,10 +74,9 @@ public class ToDoManager : MonoBehaviour
         }
         else if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
         {
-            filePath = @"D:\1.json";
+            filePath = @"D:\List.json";
         }
         loadJsonData();
-        //然后程序加载本地的json数据
     }
 
     void Update()
@@ -253,7 +252,7 @@ public class ToDoManager : MonoBehaviour
     void UpdateCould()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("");
+        IPAddress ip = IPAddress.Parse("45.77.102.177");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
@@ -282,7 +281,7 @@ public class ToDoManager : MonoBehaviour
     void CouldDown()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("");
+        IPAddress ip = IPAddress.Parse("45.77.102.177");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
@@ -316,6 +315,7 @@ public class ToDoManager : MonoBehaviour
         File.WriteAllText(filePath, contents);
         clientSocket.Close();
         downOk = true;
+        
         if (connectThread != null)
         {
             connectThread.Interrupt();
@@ -330,8 +330,7 @@ public class ToDoManager : MonoBehaviour
         {
             return "";
         }
-        return dataAsJson;
-        
+        return dataAsJson;      
     }
     string Decodeing(string s)
     {
