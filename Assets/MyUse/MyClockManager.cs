@@ -6,23 +6,6 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-//3.信息的存储读取
-
-[Serializable]
-public class ClockList
-{
-    public int totalTimer;
-    public List<SubClockList> sub;
-}
-
-[Serializable]
-public class SubClockList
-{
-    public string subName;
-    public int subTimer;
-}
-
-
 public class MyClockManager : MonoBehaviour
 {
     [SerializeField]
@@ -84,11 +67,11 @@ public class MyClockManager : MonoBehaviour
         //程序一开始找到json文件目录，并赋值给filepath；
         if (Application.platform == RuntimePlatform.Android)
         {
-            filePath = Path.Combine(Application.persistentDataPath, jsonName);
+            CoreManage.Instance.clockFilePath = Path.Combine(Application.persistentDataPath, jsonName);
         }
         else if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
         {
-            filePath = @"D:\ClockTime.json";
+            CoreManage.Instance.clockFilePath = @"D:\ClockTime.json";
         }
         loadJsonData();
     }
@@ -258,7 +241,7 @@ public class MyClockManager : MonoBehaviour
         string contents = "";
         contents = JsonUtility.ToJson(clockList) + "\n";
         Debug.Log(contents);
-        File.WriteAllText(filePath, contents);
+        File.WriteAllText(CoreManage.Instance.clockFilePath, contents);
     }
 
     /// <summary>
@@ -267,7 +250,7 @@ public class MyClockManager : MonoBehaviour
     public void loadJsonData()
     {
         string dataAsJson = "";
-        dataAsJson = ReadJsonFun();
+        dataAsJson = CoreManage.Instance.ReadJsonFun("Clock");
 
         // 正确解析json文件
         string[] splitContents = dataAsJson.Split('\n');
@@ -279,15 +262,5 @@ public class MyClockManager : MonoBehaviour
                 clockList = temp;
             }
         }
-    }
-
-    string ReadJsonFun()
-    {
-        string dataAsJson = File.ReadAllText(filePath, Encoding.UTF8);
-        if (dataAsJson == null)
-        {
-            return "";
-        }
-        return dataAsJson;
     }
 }

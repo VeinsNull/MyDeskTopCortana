@@ -10,37 +10,7 @@ using System.Globalization;
 using System.Threading;
 using System;
 using System.Collections;
-
-[Serializable]
-public class listItemClass
-{
-    public string objName;
-    public int index;
-    public List<SubListClass> sub;
-    public listItemClass(string name, int index,List<SubListClass> sudata)
-    {
-        this.objName = name;
-        this.index = index;
-        //list被json转化后的string字符串
-        this.sub = sudata;
-    }
-}
-
-[Serializable]
-public class SubListClass
-{
-    public string objName;
-    public int index;
-    public bool isok;
-    public SubListClass(string name, int index, bool isok)
-    {
-        this.objName = name;
-        this.index = index;
-        this.isok = isok;
-    }
-}
-
-
+using TMPro;
 
 public class ToDoManager : MonoBehaviour
 {
@@ -53,16 +23,16 @@ public class ToDoManager : MonoBehaviour
     public Transform content;//存放添加后的任务列表
     public GameObject ListItemPreFab;//用户任务列表预制体
 
-    string filePath;//存放同步的json文件
-    string jsonName = "List.json";
+    string jsonName = "todo.json";
     Thread connectThread;
     private List<ListObject> ListObjects = new List<ListObject>();
 
     bool buttonOk = false;
     bool downOk = false;
 
+    string transmissionStatus="";
 
-
+    bool whileFlag = false;
 
     void Start()
     {
@@ -70,11 +40,11 @@ public class ToDoManager : MonoBehaviour
         //程序一开始找到json文件目录，并赋值给filepath；
         if (Application.platform == RuntimePlatform.Android)
         {
-            filePath = Path.Combine(Application.persistentDataPath, jsonName);
+            CoreManage.Instance.todoFilePath = Path.Combine(Application.persistentDataPath, jsonName);
         }
         else if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
         {
-            filePath = @"D:\List.json";
+            CoreManage.Instance.todoFilePath = @"D:\todo.json";
         }
         loadJsonData();
     }
@@ -186,7 +156,7 @@ public class ToDoManager : MonoBehaviour
             templist.Clear();
         }
         Debug.Log(contents);
-        File.WriteAllText(filePath, contents);
+        File.WriteAllText(CoreManage.Instance.todoFilePath, contents);
     }
 
     /// <summary>
@@ -203,7 +173,7 @@ public class ToDoManager : MonoBehaviour
         }
         ListObjects.Clear();
         string dataAsJson = "";
-        dataAsJson = ReadJsonFun();
+        dataAsJson =CoreManage.Instance.ReadJsonFun("Todo");
 
         // 正确解析json文件
         string[] splitContents = dataAsJson.Split('\n');
@@ -249,6 +219,19 @@ public class ToDoManager : MonoBehaviour
         yield break;
     }
 
+    void TransmissionStatus(Socket clientSocket)
+    {
+        while (whileFlag)
+        {
+            string recvStr = "";
+            byte[] recvBytes = new byte[10240];
+            int bytes;
+            bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
+            recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
+            transmissionStatus = recvStr.Trim();
+        }
+    }
+
     void UpdateCould()
     {
         #region 连接服务器
@@ -265,12 +248,57 @@ public class ToDoManager : MonoBehaviour
             return;
         }
         #endregion
-        //读取本地json文件，将其转换为string类型
-        string json = ReadJsonFun();
-        Debug.Log(json);
-        //将string类型的数据发送给服务器，让服务器以json文件保存
-        clientSocket.Send(Encoding.UTF8.GetBytes(json));
-        clientSocket.Close();
+
+        #region 本线程发送数据到服务器，再次线程中再开一个线程，专门接收状态信息。
+        whileFlag = true;
+        Thread upThread = new Thread(() => TransmissionStatus(clientSocket));
+        upThread.Start();
+        clientSocket.Send(Encoding.UTF8.GetBytes("UP"));
+
+        while (true)
+        {
+            if(transmissionStatus=="con")//服务器发送信息，连接成功，我们给他发送todo，让他准备好接收todojson文件
+            {
+                clientSocket.Send(Encoding.UTF8.GetBytes("todo"));
+                transmissionStatus = "";
+            }
+            else if(transmissionStatus=="todoStart")//服务器接到消息准备接收
+            {
+                string todoJson = CoreManage.Instance.ReadJsonFun("Todo");
+                clientSocket.Send(Encoding.UTF8.GetBytes(todoJson));
+                Debug.Log(todoJson);
+                transmissionStatus = "";
+            }
+            else if(transmissionStatus=="todoCP")//todojson文件接收完毕，给他发送clock,让他准备好接收colockjson文件
+            {
+                clientSocket.Send(Encoding.UTF8.GetBytes("clock"));
+                transmissionStatus = "";
+            }
+            else if(transmissionStatus=="clockStart")//服务器接到消息准备接收
+            {
+                string clockJson = CoreManage.Instance.ReadJsonFun("Clock");               
+                clientSocket.Send(Encoding.UTF8.GetBytes(clockJson));
+                Debug.Log(clockJson);
+                transmissionStatus = "";
+            }
+            else if(transmissionStatus=="clockCP")//clockjson文件接收完毕，给他发送exit，退出客户端连接
+            {
+                whileFlag = false;
+                clientSocket.Send(Encoding.UTF8.GetBytes("exit"));
+                clientSocket.Close();
+                transmissionStatus = "";
+                break;
+                
+            }
+        }
+        #endregion
+
+        if (upThread!=null)
+        {
+            upThread.Interrupt();
+            upThread.Abort();
+        }
+        //关掉线程
         if (connectThread != null)
         {
             connectThread.Interrupt();
@@ -305,45 +333,22 @@ public class ToDoManager : MonoBehaviour
         recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
         //格式化字符串，因为从服务端传过来的数据太乱了
         Debug.Log("从服务端获取的数据为：" + recvStr);
-        string contents = Decodeing(recvStr);
+        string contents = CoreManage.Instance.Decodeing(recvStr);
         contents = contents.Replace(@"\\n", "\n");
         contents = contents.Replace(@"\\", "");
         contents = contents.Replace(@"\", "");
         contents = contents.Replace("\'\"", "");
         contents = contents.Replace("\"\'", "");
         Debug.Log("从服务端获取的数据解析后为：" + contents);
-        File.WriteAllText(filePath, contents);
+        File.WriteAllText(CoreManage.Instance.todoFilePath, contents);
         clientSocket.Close();
         downOk = true;
-        
+
         if (connectThread != null)
         {
             connectThread.Interrupt();
             connectThread.Abort();
-        }      
-    }
-
-    string ReadJsonFun()
-    {
-        string dataAsJson = File.ReadAllText(filePath,Encoding.UTF8);
-        if(dataAsJson==null)
-        {
-            return "";
         }
-        return dataAsJson;      
-    }
-    string Decodeing(string s)
-    {
-        Regex reUnicode = new Regex(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
-        return reUnicode.Replace(s, m =>
-        {
-            short c;
-            if (short.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture, out c))
-            {
-                return "" + (char)c;
-            }
-            return m.Value;
-        });
     }
 }
 
