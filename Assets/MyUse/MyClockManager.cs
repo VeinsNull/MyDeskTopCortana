@@ -122,10 +122,7 @@ public class MyClockManager : MonoBehaviour
         temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
         temp.subTimer = (jsTime/60);
         subClockList.Add(temp);
-        if(subClockList.Count>0)
-        {
-            clockList.sub = subClockList;
-        }
+        clockList.sub = subClockList;
         saveJsonData();
 
         StopCoroutine("JSTimeCoro");
@@ -217,12 +214,9 @@ public class MyClockManager : MonoBehaviour
         temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
         temp.subTimer = ((fqTime - fqTimee) / 60);
         subClockList.Add(temp);
-        if (subClockList.Count > 0)
-        {
-            clockList.sub = subClockList;
-        }
-
+        clockList.sub = subClockList;
         saveJsonData();
+
         fqButton.GetComponentInChildren<Text>().text = "开始";
         fqTime = 0;
         fqTimee = 0;
@@ -260,6 +254,10 @@ public class MyClockManager : MonoBehaviour
             {
                 ClockList temp = JsonUtility.FromJson<ClockList>(content.Trim());
                 clockList = temp;
+                for (int i = 0; i < clockList.sub.Count; i++)
+                {
+                    subClockList[i] = clockList.sub[i];
+                }
             }
         }
     }
