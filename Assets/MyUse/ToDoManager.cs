@@ -321,7 +321,7 @@ public class ToDoManager : MonoBehaviour
     void CouldDown()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("45.77.102.177");
+        IPAddress ip = IPAddress.Parse("127.0.0.1");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
@@ -334,15 +334,26 @@ public class ToDoManager : MonoBehaviour
             return;
         }
         #endregion
-        //封装到函数里由unity的button事件调用
-        clientSocket.Send(Encoding.UTF8.GetBytes("下载"));//向服务器发送数据，需要发送中文则需要使用Encoding.UTF8.GetBytes()，否则会乱码
+        whileFlag = true;
+        Thread downThread = new Thread(() => TransmissionStatus(clientSocket));
+        downThread.Start();
+        clientSocket.Send(Encoding.UTF8.GetBytes("Down"));
+
+
+
+
         //发送完下载命令后，准备接收服务端发过来的数据
-        //！待解决问题：当传输数据过多时，数据丢失现象
         string recvStr = "";
         byte[] recvBytes = new byte[10240];
         int bytes;
         bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
         recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
+        
+        
+
+
+
+
         //格式化字符串，因为从服务端传过来的数据太乱了
         Debug.Log("从服务端获取的数据为：" + recvStr);
         string contents = CoreManage.Instance.Decodeing(recvStr);
