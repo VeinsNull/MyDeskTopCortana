@@ -235,11 +235,11 @@ public class ToDoManager : MonoBehaviour
     void UpdateCould()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("45.77.102.177");
+        IPAddress ip = IPAddress.Parse("127.0.0.1");
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
-            clientSocket.Connect(new IPEndPoint(ip, 2000)); //配置服务器IP与端口  
+            clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
             Debug.Log("连接服务器成功:准备上传");
         }
         catch
@@ -260,6 +260,7 @@ public class ToDoManager : MonoBehaviour
             if(transmissionStatus=="con")//服务器发送信息，连接成功，我们给他发送todo，让他准备好接收todojson文件
             {
                 clientSocket.Send(Encoding.UTF8.GetBytes("todo"));
+                Debug.Log(transmissionStatus);
                 transmissionStatus = "";
             }
             else if(transmissionStatus=="todoStart")//服务器接到消息准备接收
@@ -271,12 +272,14 @@ public class ToDoManager : MonoBehaviour
                 if (len == bufferData.Length)
                 {
                     Debug.Log(todoJson);
-                }              
+                }
+                Debug.Log(transmissionStatus);
                 transmissionStatus = "";
             }
             else if(transmissionStatus=="todoCP")//todojson文件接收完毕，给他发送clock,让他准备好接收colockjson文件
             {
                 clientSocket.Send(Encoding.UTF8.GetBytes("clock"));
+                Debug.Log(transmissionStatus);
                 transmissionStatus = "";
             }
             else if(transmissionStatus=="clockStart")//服务器接到消息准备接收
@@ -297,8 +300,7 @@ public class ToDoManager : MonoBehaviour
                 clientSocket.Send(Encoding.UTF8.GetBytes("exit"));
                 clientSocket.Close();
                 transmissionStatus = "";
-                break;
-                
+                break;                
             }
         }
         #endregion
