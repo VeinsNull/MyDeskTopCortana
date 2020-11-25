@@ -239,7 +239,7 @@ public class ToDoManager : MonoBehaviour
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
-            clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
+            clientSocket.Connect(new IPEndPoint(ip, 2000)); //配置服务器IP与端口  
             Debug.Log("连接服务器成功:准备上传");
         }
         catch
@@ -264,9 +264,14 @@ public class ToDoManager : MonoBehaviour
             }
             else if(transmissionStatus=="todoStart")//服务器接到消息准备接收
             {
+                //todolist和clock数据可能随着时间推移过大，所以需要拆包分包发送
                 string todoJson = CoreManage.Instance.ReadJsonFun("Todo");
-                clientSocket.Send(Encoding.UTF8.GetBytes(todoJson));
-                Debug.Log(todoJson);
+                byte[] bufferData = CoreManage.Instance.BuildData(0x9, Encoding.UTF8.GetBytes(todoJson));
+                int len = clientSocket.Send(Encoding.UTF8.GetBytes(todoJson));
+                if (len == bufferData.Length)
+                {
+                    Debug.Log(todoJson);
+                }              
                 transmissionStatus = "";
             }
             else if(transmissionStatus=="todoCP")//todojson文件接收完毕，给他发送clock,让他准备好接收colockjson文件
@@ -276,9 +281,14 @@ public class ToDoManager : MonoBehaviour
             }
             else if(transmissionStatus=="clockStart")//服务器接到消息准备接收
             {
-                string clockJson = CoreManage.Instance.ReadJsonFun("Clock");               
-                clientSocket.Send(Encoding.UTF8.GetBytes(clockJson));
-                Debug.Log(clockJson);
+                //todolist和clock数据可能随着时间推移过大，所以需要拆包分包发送
+                string clockJson = CoreManage.Instance.ReadJsonFun("Clock");
+                byte[] bufferData = CoreManage.Instance.BuildData(0x9, Encoding.UTF8.GetBytes(clockJson));
+                int len = clientSocket.Send(Encoding.UTF8.GetBytes(clockJson));
+                if (len == bufferData.Length)
+                {
+                    Debug.Log(clockJson);
+                }
                 transmissionStatus = "";
             }
             else if(transmissionStatus=="clockCP")//clockjson文件接收完毕，给他发送exit，退出客户端连接
