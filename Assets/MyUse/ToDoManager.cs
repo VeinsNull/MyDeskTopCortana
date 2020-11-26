@@ -219,6 +219,7 @@ public class ToDoManager : MonoBehaviour
         yield break;
     }
 
+
     void TransmissionStatus(Socket clientSocket)
     {
         while (whileFlag)
@@ -229,149 +230,52 @@ public class ToDoManager : MonoBehaviour
             bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
             recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
             transmissionStatus = recvStr.Trim();
+            Debug.Log(transmissionStatus);
         }
     }
 
     void UpdateCould()
     {
-        #region 连接服务器
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
-        Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        try
-        {
-            clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
-            Debug.Log("连接服务器成功:准备上传");
-        }
-        catch
-        {
-            Debug.Log("连接服务器失败");
-            return;
-        }
-        #endregion
-
-        #region 本线程发送数据到服务器，再次线程中再开一个线程，专门接收状态信息。
-        whileFlag = true;
-        Thread upThread = new Thread(() => TransmissionStatus(clientSocket));
-        upThread.Start();
-        clientSocket.Send(Encoding.UTF8.GetBytes("UP"));
-
-        while (true)
-        {
-            if(transmissionStatus=="con")//服务器发送信息，连接成功，我们给他发送todo，让他准备好接收todojson文件
-            {
-                clientSocket.Send(Encoding.UTF8.GetBytes("todo"));
-                Debug.Log(transmissionStatus);
-                transmissionStatus = "";
-            }
-            else if(transmissionStatus=="todoStart")//服务器接到消息准备接收
-            {
-                //todolist和clock数据可能随着时间推移过大，所以需要拆包分包发送
-                string todoJson = CoreManage.Instance.ReadJsonFun("Todo");
-                byte[] bufferData = CoreManage.Instance.BuildData(0x9, Encoding.UTF8.GetBytes(todoJson));
-                int len = clientSocket.Send(Encoding.UTF8.GetBytes(todoJson));
-                if (len == bufferData.Length)
-                {
-                    Debug.Log(todoJson);
-                }
-                Debug.Log(transmissionStatus);
-                transmissionStatus = "";
-            }
-            else if(transmissionStatus=="todoCP")//todojson文件接收完毕，给他发送clock,让他准备好接收colockjson文件
-            {
-                clientSocket.Send(Encoding.UTF8.GetBytes("clock"));
-                Debug.Log(transmissionStatus);
-                transmissionStatus = "";
-            }
-            else if(transmissionStatus=="clockStart")//服务器接到消息准备接收
-            {
-                //todolist和clock数据可能随着时间推移过大，所以需要拆包分包发送
-                string clockJson = CoreManage.Instance.ReadJsonFun("Clock");
-                byte[] bufferData = CoreManage.Instance.BuildData(0x9, Encoding.UTF8.GetBytes(clockJson));
-                int len = clientSocket.Send(Encoding.UTF8.GetBytes(clockJson));
-                if (len == bufferData.Length)
-                {
-                    Debug.Log(clockJson);
-                }
-                transmissionStatus = "";
-            }
-            else if(transmissionStatus=="clockCP")//clockjson文件接收完毕，给他发送exit，退出客户端连接
-            {
-                whileFlag = false;
-                clientSocket.Send(Encoding.UTF8.GetBytes("exit"));
-                clientSocket.Close();
-                transmissionStatus = "";
-                break;                
-            }
-        }
-        #endregion
-
-        if (upThread!=null)
-        {
-            upThread.Interrupt();
-            upThread.Abort();
-        }
-        //关掉线程
-        if (connectThread != null)
-        {
-            connectThread.Interrupt();
-            connectThread.Abort();
-        }
+        NetCon.UpdateCould();
     }
+
+
 
     void CouldDown()
     {
-        #region 连接服务器
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
-        Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        try
-        {
-            clientSocket.Connect(new IPEndPoint(ip, 2333)); //配置服务器IP与端口  
-            Debug.Log("连接服务器成功:准备下载");
-        }
-        catch
-        {
-            Debug.Log("连接服务器失败");
-            return;
-        }
-        #endregion
-        whileFlag = true;
-        Thread downThread = new Thread(() => TransmissionStatus(clientSocket));
-        downThread.Start();
-        clientSocket.Send(Encoding.UTF8.GetBytes("Down"));
+        NetCon.CouldDown();
 
 
-
-
-        //发送完下载命令后，准备接收服务端发过来的数据
-        string recvStr = "";
-        byte[] recvBytes = new byte[10240];
-        int bytes;
-        bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
-        recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
+        ////发送完下载命令后，准备接收服务端发过来的数据
+        //string recvStr = "";
+        //byte[] recvBytes = new byte[10240];
+        //int bytes;
+        //bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
+        //recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
         
         
 
 
 
 
-        //格式化字符串，因为从服务端传过来的数据太乱了
-        Debug.Log("从服务端获取的数据为：" + recvStr);
-        string contents = CoreManage.Instance.Decodeing(recvStr);
-        contents = contents.Replace(@"\\n", "\n");
-        contents = contents.Replace(@"\\", "");
-        contents = contents.Replace(@"\", "");
-        contents = contents.Replace("\'\"", "");
-        contents = contents.Replace("\"\'", "");
-        Debug.Log("从服务端获取的数据解析后为：" + contents);
-        File.WriteAllText(CoreManage.Instance.todoFilePath, contents);
-        clientSocket.Close();
-        downOk = true;
+        ////格式化字符串，因为从服务端传过来的数据太乱了
+        //Debug.Log("从服务端获取的数据为：" + recvStr);
+        //string contents = CoreManage.Instance.Decodeing(recvStr);
+        //contents = contents.Replace(@"\\n", "\n");
+        //contents = contents.Replace(@"\\", "");
+        //contents = contents.Replace(@"\", "");
+        //contents = contents.Replace("\'\"", "");
+        //contents = contents.Replace("\"\'", "");
+        //Debug.Log("从服务端获取的数据解析后为：" + contents);
+        //File.WriteAllText(CoreManage.Instance.todoFilePath, contents);
+        //clientSocket.Close();
+        //downOk = true;
 
-        if (connectThread != null)
-        {
-            connectThread.Interrupt();
-            connectThread.Abort();
-        }
+        //if (connectThread != null)
+        //{
+        //    connectThread.Interrupt();
+        //    connectThread.Abort();
+        //}
     }
 }
 
