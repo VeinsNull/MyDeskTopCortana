@@ -37,6 +37,13 @@ public class MyClockManager : MonoBehaviour
     [SerializeField]
     private Button backButton;//返回按钮
     [SerializeField]
+    private Button recordButton;
+    private int reButtonCount=0;
+    [SerializeField]
+    private Transform timeRecordCanvas;
+    [SerializeField]
+    private Text timeRecordtext;
+    [SerializeField]
     private Transform toDoListCanvas;
     [SerializeField]
     private Transform clockPanelCanvas;
@@ -59,6 +66,7 @@ public class MyClockManager : MonoBehaviour
         jsButton1.onClick.AddListener(JSButtonOneDown);
         jsButton2.onClick.AddListener(JSButtonTwoDown);
         backButton.onClick.AddListener(SetBack);
+        recordButton.onClick.AddListener(RecordTimeList);
 
         //程序一开始找到json文件目录，并赋值给filepath；
         if (Application.platform == RuntimePlatform.Android)
@@ -70,6 +78,27 @@ public class MyClockManager : MonoBehaviour
             CoreManage.Instance.clockFilePath = @"D:\ClockTime.json";
         }
         loadJsonData();
+    }
+
+    private void RecordTimeList()
+    {
+        reButtonCount += 1;
+        if (reButtonCount == 1)//显示
+        {
+            timeRecordCanvas.gameObject.SetActive(true);
+            timeRecordtext.text = string.Format("任务总时间为：{0}\n",CoreManage.Instance.clockList.totalTimer);
+            for (int i = 0; i < CoreManage.Instance.clockList.sub.Count; i++)
+            {
+                timeRecordtext.text += string.Format("子任务：{0}，子时间：{1}\n"
+                    , CoreManage.Instance.clockList.sub[i].subName, CoreManage.Instance.clockList.sub[i].subTimer);
+            }
+        }
+        else if (reButtonCount == 2)//关闭
+        {
+            timeRecordCanvas.gameObject.SetActive(false);
+            timeRecordtext.text = "";
+            reButtonCount = 0;
+        }
     }
 
     void Update()
