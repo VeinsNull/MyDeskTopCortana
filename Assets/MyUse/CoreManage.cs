@@ -78,26 +78,31 @@ public class CoreManage
         }
     }
 
+   public bool todoDownOk = false;
+   public bool clockDownOk = false;
+
     public string todoFilePath;
     public string clockFilePath;
 
     public ClockList clockList = new ClockList();//因为线程不能控制Unity的一些资源，所以这个作为副本存储，方便调用
     public List<ListObject> ListObjects = new List<ListObject>();//因为线程不能控制Unity的一些资源，所以这个作为副本存储，方便调用
+    public List<SubClockList> subClockList = new List<SubClockList>();//因为线程不能控制Unity的一些资源，所以这个作为副本存储，方便调用
 
-
-    public string Decodeing(string s)
-    {
-        Regex reUnicode = new Regex(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
-        return reUnicode.Replace(s, m =>
-        {
-            short c;
-            if (short.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture, out c))
-            {
-                return "" + (char)c;
-            }
-            return m.Value;
-        });
-    }
+    #region 暂时废弃，因为之前服务端是python需要自己手动解码
+    //public string Decodeing(string s)
+    //{
+    //    Regex reUnicode = new Regex(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
+    //    return reUnicode.Replace(s, m =>
+    //    {
+    //        short c;
+    //        if (short.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture, out c))
+    //        {
+    //            return "" + (char)c;
+    //        }
+    //        return m.Value;
+    //    });
+    //}
+    #endregion
 
     /// <summary>
     /// 读取本地todoJson文件，将其转换为string类型
@@ -149,4 +154,6 @@ public class CoreManage
         }
         return false;
     }
+
+
 }

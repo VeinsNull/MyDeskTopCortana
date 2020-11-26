@@ -28,9 +28,9 @@ public class ToDoManager : MonoBehaviour
     //public List<ListObject> ListObjects = new List<ListObject>();
 
     bool buttonOk = false;
-    bool downOk = false;
 
-    string transmissionStatus="";
+
+    string transmissionStatus = "";
 
     bool whileFlag = false;
 
@@ -51,12 +51,12 @@ public class ToDoManager : MonoBehaviour
 
     void Update()
     {
-        if (downOk)
+        if (CoreManage.Instance.todoDownOk)
         {
-            downOk = false;
-            //从服务器上下载数据
-            loadJsonData();           
-        }         
+            CoreManage.Instance.todoDownOk = false;
+            //从服务器上下载数据后更新一下内存信息
+            loadJsonData();
+        }
     }
 
     public void CreateNewItem()
@@ -74,7 +74,7 @@ public class ToDoManager : MonoBehaviour
     /// <param name="temp"></param>
     /// <param name="loadIndex"></param>
     /// <param name="loding"></param>
-    private void CreateListItem(string temp, int loadIndex = 0, bool loding = false, listItemClass listclass=null)
+    private void CreateListItem(string temp, int loadIndex = 0, bool loding = false, listItemClass listclass = null)
     {
         //实例化清单
         GameObject item = Instantiate(ListItemPreFab, content);
@@ -86,7 +86,7 @@ public class ToDoManager : MonoBehaviour
             index = CoreManage.Instance.ListObjects.Count;
         }
         itemObject.setObjectInfo(temp, index);
-        
+
         //为清单上的信息赋值
         item.GetComponentInChildren<Text>().text = temp;
         if (listclass != null)
@@ -97,9 +97,9 @@ public class ToDoManager : MonoBehaviour
             itemObject.sublistcalss.Clear();
             for (int i = 0; i < listclass.sub.Count; i++)
             {
-                SubListClass subobj = new SubListClass(listclass.sub[i].objName,listclass.sub[i].index, listclass.sub[i].isok);
+                SubListClass subobj = new SubListClass(listclass.sub[i].objName, listclass.sub[i].index, listclass.sub[i].isok);
                 itemObject.sublistcalss.Add(subobj);
-            }            
+            }
         }
         //ListObjects.Add(itemObject);
         CoreManage.Instance.ListObjects.Add(itemObject);
@@ -114,7 +114,7 @@ public class ToDoManager : MonoBehaviour
         }
     }
 
-     void InClock(string obj)
+    void InClock(string obj)
     {
         clockPanel.gameObject.SetActive(true);
         clockPanel.Find("InputTaskName").GetComponent<InputField>().text = obj;
@@ -122,7 +122,7 @@ public class ToDoManager : MonoBehaviour
     }
 
     void CheckItem(ListObject item)
-    {   
+    {
         if (item.subListObjects != null)
         {
             for (int i = item.subListObjects.Count; i > 0; i--)
@@ -138,9 +138,9 @@ public class ToDoManager : MonoBehaviour
         CoreManage.Instance.SaveData("todo");
     }
 
-    void loadJsonData()
+    public void loadJsonData()
     {
-        if(content.childCount>0)
+        if (content.childCount > 0)
         {
             for (int i = 0; i < content.childCount; i++)
             {
@@ -150,7 +150,7 @@ public class ToDoManager : MonoBehaviour
         //ListObjects.Clear();
         CoreManage.Instance.ListObjects.Clear();
         string dataAsJson = "";
-        dataAsJson =CoreManage.Instance.ReadJsonFun(CoreManage.Instance.todoFilePath);
+        dataAsJson = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.todoFilePath);
 
         // 正确解析json文件
         string[] splitContents = dataAsJson.Split('\n');
@@ -160,14 +160,15 @@ public class ToDoManager : MonoBehaviour
             {
                 listItemClass temp = JsonUtility.FromJson<listItemClass>(content.Trim());
                 //先只创建父级任务，然后将子任务信息存到父级任务的listObject脚本中去。
-                CreateListItem(temp.objName, temp.index, true,temp);
+                CreateListItem(temp.objName, temp.index, true, temp);
             }
         }
+
     }
 
     public void ButtonClick(string info)
     {
-        
+
         if (buttonOk)
         {
             StartCoroutine(WaitTime());
@@ -184,14 +185,14 @@ public class ToDoManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("请隔1秒后再试");
-        }   
+            Debug.Log("请隔3秒后再试");
+        }
     }
 
     IEnumerator WaitTime()
     {
         buttonOk = false;
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(3f);
         buttonOk = true;
         yield break;
     }
@@ -223,6 +224,10 @@ public class ToDoManager : MonoBehaviour
     void CouldDown()
     {
         NetCon.CouldDown();
+        //下载完成后应该加载一遍,用bool控制update
+        CoreManage.Instance.todoDownOk = true;
+        CoreManage.Instance.clockDownOk = true;
+
         #region 之前的废弃代码，之前与python通信，需要手动转义；现在服务端用.netCore实现，通过IPAddress.HostToNetworkOrder转换
         ////发送完下载命令后，准备接收服务端发过来的数据
         //string recvStr = "";
@@ -250,7 +255,7 @@ public class ToDoManager : MonoBehaviour
         //    connectThread.Abort();
         //}
         #endregion
-        
+
     }
 }
 

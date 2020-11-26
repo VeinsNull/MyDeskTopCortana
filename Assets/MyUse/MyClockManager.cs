@@ -40,9 +40,9 @@ public class MyClockManager : MonoBehaviour
     private Transform toDoListCanvas;
     [SerializeField]
     private Transform clockPanelCanvas;
-
-    //public ClockList clockList = new ClockList();//用Coremange存着
-    public List<SubClockList> subClockList = new List<SubClockList>();
+    //用Coremange存着
+    //public ClockList clockList = new ClockList();
+    //public List<SubClockList> subClockList = new List<SubClockList>();
 
     string filePath;//存放同步的json文件
     string jsonName = "ClockTime.json";
@@ -71,6 +71,17 @@ public class MyClockManager : MonoBehaviour
         }
         loadJsonData();
     }
+
+    void Update()
+    {
+        if (CoreManage.Instance.clockDownOk)
+        {
+            CoreManage.Instance.clockDownOk = false;
+            //从服务器上下载数据后更新一下内存信息
+            loadJsonData();
+        }
+    }
+
 
     void OnEnable()
     {
@@ -118,8 +129,8 @@ public class MyClockManager : MonoBehaviour
         SubClockList temp = new SubClockList();
         temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
         temp.subTimer = (jsTime/60);
-        subClockList.Add(temp);
-        CoreManage.Instance.clockList.sub = subClockList;
+        CoreManage.Instance.subClockList.Add(temp);
+        CoreManage.Instance.clockList.sub = CoreManage.Instance.subClockList;
         CoreManage.Instance.SaveData("clock");
 
         StopCoroutine("JSTimeCoro");
@@ -210,8 +221,8 @@ public class MyClockManager : MonoBehaviour
         SubClockList temp = new SubClockList();
         temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
         temp.subTimer = ((fqTime - fqTimee) / 60);
-        subClockList.Add(temp);
-        CoreManage.Instance.clockList.sub = subClockList;
+        CoreManage.Instance.subClockList.Add(temp);
+        CoreManage.Instance.clockList.sub = CoreManage.Instance.subClockList;
         CoreManage.Instance.SaveData("clock");
 
         fqButton.GetComponentInChildren<Text>().text = "开始";
@@ -223,10 +234,7 @@ public class MyClockManager : MonoBehaviour
         LoadingImage = 1;
     }
 
-    /// <summary>
-    /// 从存储中加载json文件
-    /// </summary>
-    public void loadJsonData()
+    void loadJsonData()
     {
         string dataAsJson = "";
         dataAsJson = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.clockFilePath);
@@ -239,10 +247,9 @@ public class MyClockManager : MonoBehaviour
             {
                 ClockList temp = JsonUtility.FromJson<ClockList>(content.Trim());
                 CoreManage.Instance.clockList = temp;
-                for (int i = 0; i < CoreManage.Instance.clockList.sub.Count; i++)
-                {
-                    subClockList[i] = CoreManage.Instance.clockList.sub[i];
-                }
+                CoreManage.Instance.subClockList = CoreManage.Instance.clockList.sub;
+                Debug.Log("clocklist内的总时间值为：" + CoreManage.Instance.clockList.totalTimer);
+                Debug.Log("clocklist内的分时间信息数量为：" + CoreManage.Instance.clockList.sub.Count);
             }
         }
     }

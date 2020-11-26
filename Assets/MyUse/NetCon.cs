@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -105,7 +106,17 @@ class NetCon
                 BodyLength -= iBytesBody;
             }
             //一个消息包接收完毕，解析消息包
-            UnpackData(recvBytesHead, recvBytesBody);
+            string[] strTemp = UnpackData(recvBytesHead, recvBytesBody);
+            if (strTemp.Length > 2)
+            {
+                File.WriteAllText(CoreManage.Instance.todoFilePath, strTemp[0]);
+                File.WriteAllText(CoreManage.Instance.clockFilePath, strTemp[1]);
+                Debug.Log("服务器"+ clientSocket.RemoteEndPoint + "发送过来的Json文件写入完成");
+            }
+            else
+            {
+                Debug.Log("服务器" + clientSocket.RemoteEndPoint + "发送过来的Json文件写入完成");
+            }
             break;
         }
     }
@@ -118,7 +129,7 @@ class NetCon
     /// </summary>
     /// <param name="Head">消息头</param>
     /// <param name="Body">消息体</param>
-    public static void UnpackData(byte[] Head, byte[] Body)
+    public static string[] UnpackData(byte[] Head, byte[] Body)
     {
         byte[] bytes = new byte[4];
         Array.Copy(Head, 0, bytes, 0, 4);
@@ -141,7 +152,8 @@ class NetCon
         Console.WriteLine("接收到数据包中的数据加密方式为：" + IPAddress.NetworkToHostOrder(BitConverter.ToInt32(bytes, 0)));
 
         bytes = new byte[Body.Length];
-        for (int i = 0; i < Body.Length;)
+        string[] strmsg = new string[Body.Length];
+        for (int i = 0, j = 0; i < Body.Length;)
         {
             byte[] _byte = new byte[4];
             Array.Copy(Body, i, _byte, 0, 4);
@@ -152,8 +164,10 @@ class NetCon
             Array.Copy(Body, i, _byte, 0, num);
             i += num;
             Console.WriteLine("接收到数据包中的数据有：" + Encoding.UTF8.GetString(_byte, 0, _byte.Length));
-            Debug.Log("接收到数据包中的数据有：" + Encoding.UTF8.GetString(_byte, 0, _byte.Length));
+            strmsg[j] = Encoding.UTF8.GetString(_byte, 0, _byte.Length);
+            j += 1;
         }
+        return strmsg;
     }
 
     /// <summary>
