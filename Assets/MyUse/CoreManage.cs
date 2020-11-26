@@ -81,6 +81,10 @@ public class CoreManage
     public string todoFilePath;
     public string clockFilePath;
 
+    public ClockList clockList = new ClockList();//因为线程不能控制Unity的一些资源，所以这个作为副本存储，方便调用
+    public List<ListObject> ListObjects = new List<ListObject>();//因为线程不能控制Unity的一些资源，所以这个作为副本存储，方便调用
+
+
     public string Decodeing(string s)
     {
         Regex reUnicode = new Regex(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
@@ -95,31 +99,54 @@ public class CoreManage
         });
     }
 
-
     /// <summary>
     /// 读取本地todoJson文件，将其转换为string类型
     /// </summary>
     /// <param name="str"></param>
     /// <returns></returns>
-    public string ReadJsonFun(string str)
+    public string ReadJsonFun(string strPath)
     {
-        string dataAsJson="";
-        if (str == "Todo")
+        string dataAsJson = "";
+        dataAsJson = File.ReadAllText(strPath, Encoding.UTF8);
+        if (dataAsJson != null)
         {
-           dataAsJson = File.ReadAllText(todoFilePath, Encoding.UTF8);
-            if (dataAsJson != null)
-            {
-                return dataAsJson;
-            }
-        }
-        else if(str =="Clock")
-        {
-            dataAsJson = File.ReadAllText(clockFilePath, Encoding.UTF8);
-            if (dataAsJson != null)
-            {
-                return dataAsJson;
-            }
+            return dataAsJson;
         }
         return dataAsJson;
+    }
+
+
+    public bool SaveData(string str)
+    {
+        if (str == "todo")
+        {
+            string contents = "";
+            List<SubListClass> templist = new List<SubListClass>();
+            for (int i = 0; i < ListObjects.Count; i++)
+            {
+                if (ListObjects[i].sublistcalss.Count > 0)
+                {
+                    for (int j = 0; j < ListObjects[i].sublistcalss.Count; j++)
+                    {
+                        templist.Add(ListObjects[i].sublistcalss[j]);
+                    }
+                }
+                listItemClass temp2 = new listItemClass(ListObjects[i].objName, ListObjects[i].index, templist);
+                contents += JsonUtility.ToJson(temp2) + "\n";
+                templist.Clear();
+            }
+            Debug.Log(contents);
+            File.WriteAllText(CoreManage.Instance.todoFilePath, contents);
+            return true;
+        }
+        else if (str == "clock")
+        {
+            string contents = "";
+            contents = JsonUtility.ToJson(clockList) + "\n";
+            Debug.Log(contents);
+            File.WriteAllText(CoreManage.Instance.clockFilePath, contents);
+            return true;
+        }
+        return false;
     }
 }

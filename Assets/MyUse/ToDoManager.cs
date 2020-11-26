@@ -25,7 +25,7 @@ public class ToDoManager : MonoBehaviour
 
     string jsonName = "todo.json";
     Thread connectThread;
-    private List<ListObject> ListObjects = new List<ListObject>();
+    //public List<ListObject> ListObjects = new List<ListObject>();
 
     bool buttonOk = false;
     bool downOk = false;
@@ -82,7 +82,8 @@ public class ToDoManager : MonoBehaviour
         int index = 0;
         if (loding != true)
         {
-            index = ListObjects.Count;
+            //index = ListObjects.Count;
+            index = CoreManage.Instance.ListObjects.Count;
         }
         itemObject.setObjectInfo(temp, index);
         
@@ -100,7 +101,8 @@ public class ToDoManager : MonoBehaviour
                 itemObject.sublistcalss.Add(subobj);
             }            
         }
-        ListObjects.Add(itemObject);
+        //ListObjects.Add(itemObject);
+        CoreManage.Instance.ListObjects.Add(itemObject);
 
         //为button的点击事件添加监听
         itemObject.transform.Find("abandon").GetComponent<Button>().onClick.AddListener((delegate { CheckItem(itemObject); }));
@@ -108,7 +110,7 @@ public class ToDoManager : MonoBehaviour
         itemObject.transform.Find("clock").GetComponent<Button>().onClick.AddListener((delegate { InClock(temp); }));
         if (loding != true)
         {
-            saveJsonData();
+            CoreManage.Instance.SaveData("todo");
         }
     }
 
@@ -129,39 +131,13 @@ public class ToDoManager : MonoBehaviour
             }
             item.sublistcalss.Clear();
         }
-        ListObjects.Remove(item);
+        //ListObjects.Remove(item);
+        CoreManage.Instance.ListObjects.Remove(item);
         Destroy(item.gameObject);
         Destroy(item.myWriteSon.gameObject);
-        saveJsonData();
+        CoreManage.Instance.SaveData("todo");
     }
 
-    /// <summary>
-    /// 从储存清单列表的列表中读取数据写入到json文件中
-    /// </summary>
-    public void saveJsonData()
-    {
-        string contents = "";
-        List<SubListClass> templist=new List<SubListClass>();
-        for (int i = 0; i < ListObjects.Count; i++)
-        {
-            if (ListObjects[i].sublistcalss.Count > 0)
-            {
-                for (int j = 0; j < ListObjects[i].sublistcalss.Count; j++)
-                {
-                    templist.Add(ListObjects[i].sublistcalss[j]);
-                }
-            }           
-            listItemClass temp2 = new listItemClass(ListObjects[i].objName, ListObjects[i].index,templist);
-            contents += JsonUtility.ToJson(temp2) + "\n";
-            templist.Clear();
-        }
-        Debug.Log(contents);
-        File.WriteAllText(CoreManage.Instance.todoFilePath, contents);
-    }
-
-    /// <summary>
-    /// 从存储中加载json文件
-    /// </summary>
     void loadJsonData()
     {
         if(content.childCount>0)
@@ -171,9 +147,10 @@ public class ToDoManager : MonoBehaviour
                 Destroy(content.GetChild(i).gameObject);
             }
         }
-        ListObjects.Clear();
+        //ListObjects.Clear();
+        CoreManage.Instance.ListObjects.Clear();
         string dataAsJson = "";
-        dataAsJson =CoreManage.Instance.ReadJsonFun("Todo");
+        dataAsJson =CoreManage.Instance.ReadJsonFun(CoreManage.Instance.todoFilePath);
 
         // 正确解析json文件
         string[] splitContents = dataAsJson.Split('\n');
@@ -236,6 +213,8 @@ public class ToDoManager : MonoBehaviour
 
     void UpdateCould()
     {
+        CoreManage.Instance.SaveData("todo");
+        CoreManage.Instance.SaveData("clock");
         NetCon.UpdateCould();
     }
 
@@ -244,19 +223,13 @@ public class ToDoManager : MonoBehaviour
     void CouldDown()
     {
         NetCon.CouldDown();
-
-
+        #region 之前的废弃代码，之前与python通信，需要手动转义；现在服务端用.netCore实现，通过IPAddress.HostToNetworkOrder转换
         ////发送完下载命令后，准备接收服务端发过来的数据
         //string recvStr = "";
         //byte[] recvBytes = new byte[10240];
         //int bytes;
         //bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
-        //recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
-        
-        
-
-
-
+        //recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);    
 
         ////格式化字符串，因为从服务端传过来的数据太乱了
         //Debug.Log("从服务端获取的数据为：" + recvStr);
@@ -276,6 +249,8 @@ public class ToDoManager : MonoBehaviour
         //    connectThread.Interrupt();
         //    connectThread.Abort();
         //}
+        #endregion
+        
     }
 }
 

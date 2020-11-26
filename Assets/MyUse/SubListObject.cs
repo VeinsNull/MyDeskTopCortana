@@ -38,7 +38,7 @@ public class SubListObject : MonoBehaviour
         myParentObj.GetComponent<ListObject>().sublistcalss.RemoveAll(s => (s.objName == this.objName));
         myParentObj.GetComponent<ListObject>().subListObjects.Remove(this.GetComponent<SubListObject>());
         myParentObj.GetComponent<ListObject>().countSon -= 1;
-        myParentObj.transform.parent.parent.parent.parent.parent.GetComponent<ToDoManager>().saveJsonData();
+        CoreManage.Instance.SaveData("todo");
         Destroy(this.gameObject);
         
     }
@@ -58,7 +58,7 @@ public class SubListObject : MonoBehaviour
             if (myParentObj.GetComponent<ListObject>().sublistcalss[i].objName == this.objName)
             {
                 myParentObj.GetComponent<ListObject>().sublistcalss[i].isok = this.isok;
-                myParentObj.transform.parent.parent.parent.parent.parent.GetComponent<ToDoManager>().saveJsonData();
+                CoreManage.Instance.SaveData("todo");
             }
         }
     }

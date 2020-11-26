@@ -27,8 +27,8 @@ class NetCon
         #endregion
 
         string[] JsonStr = new string[2];
-        JsonStr[0] = CoreManage.Instance.ReadJsonFun("Todo");
-        JsonStr[1] = CoreManage.Instance.ReadJsonFun("Clock");
+        JsonStr[0] = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.todoFilePath);
+        JsonStr[1] = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.clockFilePath);
         byte[] sendBytes = BuildDataPackage(1,233, 3, 4, 5, JsonStr);
         clientSocket.Send(sendBytes,sendBytes.Length,0);
     }
@@ -52,7 +52,6 @@ class NetCon
         string[] temp = new string[]{"下载"};
         byte[] sendBytes = BuildDataPackage(1, 233, 3, 4, 5, temp);
         clientSocket.Send(sendBytes, sendBytes.Length, 0);
-
         while (true)
         {
             //接受消息头（消息校验码4字节 + 消息长度4字节 + 身份ID8字节 + 主命令4字节 + 子命令4字节 + 加密方式4字节 = 28字节）

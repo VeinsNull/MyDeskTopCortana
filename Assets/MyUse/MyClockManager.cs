@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -42,8 +41,8 @@ public class MyClockManager : MonoBehaviour
     [SerializeField]
     private Transform clockPanelCanvas;
 
-    public ClockList clockList;
-    public List<SubClockList> subClockList;
+    //public ClockList clockList = new ClockList();//用Coremange存着
+    public List<SubClockList> subClockList = new List<SubClockList>();
 
     string filePath;//存放同步的json文件
     string jsonName = "ClockTime.json";
@@ -60,9 +59,6 @@ public class MyClockManager : MonoBehaviour
         jsButton1.onClick.AddListener(JSButtonOneDown);
         jsButton2.onClick.AddListener(JSButtonTwoDown);
         backButton.onClick.AddListener(SetBack);
-        clockList = new ClockList();
-        subClockList = new List<SubClockList>();
-
 
         //程序一开始找到json文件目录，并赋值给filepath；
         if (Application.platform == RuntimePlatform.Android)
@@ -117,13 +113,14 @@ public class MyClockManager : MonoBehaviour
     private void JSButtonTwoDown()
     {
         //用户按下结束键，停止计时，时间归零
-        clockList.totalTimer += (jsTime/60);
+        //关于这个有多种写法 ① 直接赋值给CoreManage中的clockList ②当前脚本留存一个备份，在赋值给clockList，我打算采用第一种
+        CoreManage.Instance.clockList.totalTimer += (jsTime/60);
         SubClockList temp = new SubClockList();
         temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
         temp.subTimer = (jsTime/60);
         subClockList.Add(temp);
-        clockList.sub = subClockList;
-        saveJsonData();
+        CoreManage.Instance.clockList.sub = subClockList;
+        CoreManage.Instance.SaveData("clock");
 
         StopCoroutine("JSTimeCoro");
         jsTime = 0;
@@ -209,13 +206,13 @@ public class MyClockManager : MonoBehaviour
 
     void FQRecover()
     {
-        clockList.totalTimer += ((fqTime-fqTimee) / 60);
+        CoreManage.Instance.clockList.totalTimer += ((fqTime-fqTimee) / 60);
         SubClockList temp = new SubClockList();
         temp.subName = clockPanelCanvas.Find("InputTaskName").GetComponent<InputField>().text;
         temp.subTimer = ((fqTime - fqTimee) / 60);
         subClockList.Add(temp);
-        clockList.sub = subClockList;
-        saveJsonData();
+        CoreManage.Instance.clockList.sub = subClockList;
+        CoreManage.Instance.SaveData("clock");
 
         fqButton.GetComponentInChildren<Text>().text = "开始";
         fqTime = 0;
@@ -226,25 +223,13 @@ public class MyClockManager : MonoBehaviour
         LoadingImage = 1;
     }
 
-
-    /// <summary>
-    /// 从列表中读取数据写入到json文件中
-    /// </summary>
-    private void saveJsonData()
-    {
-        string contents = "";
-        contents = JsonUtility.ToJson(clockList) + "\n";
-        Debug.Log(contents);
-        File.WriteAllText(CoreManage.Instance.clockFilePath, contents);
-    }
-
     /// <summary>
     /// 从存储中加载json文件
     /// </summary>
     public void loadJsonData()
     {
         string dataAsJson = "";
-        dataAsJson = CoreManage.Instance.ReadJsonFun("Clock");
+        dataAsJson = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.clockFilePath);
 
         // 正确解析json文件
         string[] splitContents = dataAsJson.Split('\n');
@@ -253,10 +238,10 @@ public class MyClockManager : MonoBehaviour
             if (content.Trim() != "")
             {
                 ClockList temp = JsonUtility.FromJson<ClockList>(content.Trim());
-                clockList = temp;
-                for (int i = 0; i < clockList.sub.Count; i++)
+                CoreManage.Instance.clockList = temp;
+                for (int i = 0; i < CoreManage.Instance.clockList.sub.Count; i++)
                 {
-                    subClockList[i] = clockList.sub[i];
+                    subClockList[i] = CoreManage.Instance.clockList.sub[i];
                 }
             }
         }
