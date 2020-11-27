@@ -78,8 +78,10 @@ public class CoreManage
         }
     }
 
-   public bool todoDownOk = false;
-   public bool clockDownOk = false;
+    public string ServerIp;
+
+    public bool todoDownOk = false;
+    public bool clockDownOk = false;
 
     public string todoFilePath;
     public string clockFilePath;

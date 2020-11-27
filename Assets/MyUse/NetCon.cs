@@ -13,7 +13,7 @@ class NetCon
     public static void  UpdateCould()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
+        IPAddress ip = IPAddress.Parse(CoreManage.Instance.ServerIp);
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {
@@ -30,6 +30,8 @@ class NetCon
         string[] JsonStr = new string[2];
         JsonStr[0] = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.todoFilePath);
         JsonStr[1] = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.clockFilePath);
+        Debug.Log(JsonStr[0]=="");
+        Debug.Log(JsonStr[1] == "");
         byte[] sendBytes = BuildDataPackage(1,233, 3, 4, 5, JsonStr);
         clientSocket.Send(sendBytes,sendBytes.Length,0);
     }
@@ -37,7 +39,7 @@ class NetCon
     public static void CouldDown()
     {
         #region 连接服务器
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
+        IPAddress ip = IPAddress.Parse(CoreManage.Instance.ServerIp);
         Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         try
         {

@@ -1,16 +1,10 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 using System.Text;
-using System.Net;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
-using System.Globalization;
 using System.Threading;
-using System;
 using System.Collections;
-using TMPro;
 
 public class ToDoManager : MonoBehaviour
 {
@@ -23,19 +17,21 @@ public class ToDoManager : MonoBehaviour
     public Transform content;//存放添加后的任务列表
     public GameObject ListItemPreFab;//用户任务列表预制体
 
-    string jsonName = "todo.json";
+    string jsonName = "TodoList.json";
     Thread connectThread;
     //public List<ListObject> ListObjects = new List<ListObject>();
 
     bool buttonOk = false;
-
-
-    string transmissionStatus = "";
-
-    bool whileFlag = false;
+    int settingButtonCount = 0;
+    public InputField settingIPInput;
 
     void Start()
     {
+        if (PlayerPrefs.GetString("IP")!=null)
+        {
+            CoreManage.Instance.ServerIp = PlayerPrefs.GetString("IP");
+        }
+        
         buttonOk = true;
         //程序一开始找到json文件目录，并赋值给filepath；
         if (Application.platform == RuntimePlatform.Android)
@@ -178,10 +174,30 @@ public class ToDoManager : MonoBehaviour
                 connectThread = new Thread(new ThreadStart(CouldDown));
                 connectThread.Start();
             }
-            else
+            else if(info=="上传")
             {
                 connectThread = new Thread(new ThreadStart(UpdateCould));
                 connectThread.Start();
+            }
+            else if (info == "设置")
+            {
+                settingButtonCount += 1;
+                if (settingButtonCount == 1)//打开
+                {
+                    settingIPInput.transform.gameObject.SetActive(true);
+                    if(PlayerPrefs.GetString("IP")!=null)
+                    {
+                        settingIPInput.text = PlayerPrefs.GetString("IP");
+                    }              
+                }
+                else if (settingButtonCount == 2)//关闭
+                {
+                    CoreManage.Instance.ServerIp = settingIPInput.text;
+                    PlayerPrefs.SetString("IP", settingIPInput.text);
+                    PlayerPrefs.Save();
+                    settingIPInput.transform.gameObject.SetActive(false);
+                    settingButtonCount = 0;
+                }
             }
         }
         else
@@ -196,21 +212,6 @@ public class ToDoManager : MonoBehaviour
         yield return new WaitForSeconds(3f);
         buttonOk = true;
         yield break;
-    }
-
-
-    void TransmissionStatus(Socket clientSocket)
-    {
-        while (whileFlag)
-        {
-            string recvStr = "";
-            byte[] recvBytes = new byte[10240];
-            int bytes;
-            bytes = clientSocket.Receive(recvBytes, recvBytes.Length, 0);    //从服务器端接受返回信息 
-            recvStr += Encoding.UTF8.GetString(recvBytes, 0, bytes);
-            transmissionStatus = recvStr.Trim();
-            Debug.Log(transmissionStatus);
-        }
     }
 
     void UpdateCould()
