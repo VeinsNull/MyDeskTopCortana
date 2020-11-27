@@ -10,7 +10,7 @@ using UnityEngine;
 
 class NetCon
 {
-    public static void  UpdateCould()
+    public static void UpdateCould()
     {
         #region 连接服务器
         IPAddress ip = IPAddress.Parse(CoreManage.Instance.ServerIp);
@@ -30,10 +30,18 @@ class NetCon
         string[] JsonStr = new string[2];
         JsonStr[0] = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.todoFilePath);
         JsonStr[1] = CoreManage.Instance.ReadJsonFun(CoreManage.Instance.clockFilePath);
-        Debug.Log(JsonStr[0]=="");
-        Debug.Log(JsonStr[1] == "");
-        byte[] sendBytes = BuildDataPackage(1,233, 3, 4, 5, JsonStr);
-        clientSocket.Send(sendBytes,sendBytes.Length,0);
+        if (JsonStr[0] == "")
+        {
+            JsonStr[0] = "清空";
+            Debug.Log("todoList文件为空，将填充清空命令");
+        }
+        if (JsonStr[1] == "")
+        {
+            JsonStr[1] = "清空";
+            Debug.Log("clockList文件为空，将填充清空命令");
+        }
+        byte[] sendBytes = BuildDataPackage(1, 233, 3, 4, 5, JsonStr);
+        clientSocket.Send(sendBytes, sendBytes.Length, 0);
     }
 
     public static void CouldDown()
@@ -52,7 +60,7 @@ class NetCon
             return;
         }
         #endregion
-        string[] temp = new string[]{"下载"};
+        string[] temp = new string[] { "下载" };
         byte[] sendBytes = BuildDataPackage(1, 233, 3, 4, 5, temp);
         clientSocket.Send(sendBytes, sendBytes.Length, 0);
         while (true)
@@ -111,13 +119,29 @@ class NetCon
             string[] strTemp = UnpackData(recvBytesHead, recvBytesBody);
             if (strTemp.Length > 2)
             {
-                File.WriteAllText(CoreManage.Instance.todoFilePath, strTemp[0]);
-                File.WriteAllText(CoreManage.Instance.clockFilePath, strTemp[1]);
-                Debug.Log("服务器"+ clientSocket.RemoteEndPoint + "发送过来的Json文件写入完成");
+                if (strTemp[0] == "清空")
+                {
+                    Debug.Log("服务器发送的TodoList为空数据,即将清空文件");
+                    File.WriteAllText(CoreManage.Instance.todoFilePath, "");
+                }
+                else
+                {
+                    File.WriteAllText(CoreManage.Instance.todoFilePath, strTemp[0]);
+                }
+                if (strTemp[1] == "清空")
+                {
+                    Debug.Log("服务器发送的ClockTime为空数据,即将清空文件");
+                    File.WriteAllText(CoreManage.Instance.todoFilePath, "");
+                }
+                else
+                {
+                    File.WriteAllText(CoreManage.Instance.clockFilePath, strTemp[1]);
+                }
+                Debug.Log("服务器" + clientSocket.RemoteEndPoint + "发送过来的Json文件写入完成");
             }
             else
             {
-                Debug.Log("服务器" + clientSocket.RemoteEndPoint + "发送过来的Json文件写入完成");
+                Debug.Log("服务器" + clientSocket.RemoteEndPoint + "发送过来的数据不完整");
             }
             break;
         }
