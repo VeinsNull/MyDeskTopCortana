@@ -44,7 +44,8 @@ public class ToDoManager : MonoBehaviour
         }
         else if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
         {
-            CoreManage.Instance.todoFilePath = @"D:\todo.json";
+            //CoreManage.Instance.todoFilePath = @"D:\todo.json";
+            CoreManage.Instance.todoFilePath = $"{System.Environment.CurrentDirectory}" + "\\TodoList.json";
         }
         loadJsonData();
     }

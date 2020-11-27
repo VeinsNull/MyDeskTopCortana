@@ -75,7 +75,8 @@ public class MyClockManager : MonoBehaviour
         }
         else if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
         {
-            CoreManage.Instance.clockFilePath = @"D:\ClockTime.json";
+            //CoreManage.Instance.clockFilePath = @"D:\ClockTime.json";
+            CoreManage.Instance.clockFilePath = $"{System.Environment.CurrentDirectory}" + "\\ClockTime.json";
         }
         loadJsonData();
     }
